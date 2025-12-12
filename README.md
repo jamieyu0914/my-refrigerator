@@ -1,2 +1,2 @@
 # my-refrigerator
-Let's check the item inside.
+Let's check the item inside.  🧊
