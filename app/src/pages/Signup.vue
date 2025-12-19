@@ -1,7 +1,7 @@
 <template>
   <div class="content">
     <form @submit.prevent="onSubmit">
-      <h2>Login</h2>
+      <h2>Sign Up</h2>
       <div class="input-box">
         <input v-model="username" type="text" placeholder="Username" required />
         <i class="ri-user-fill"></i>
@@ -21,15 +21,24 @@
           @click="togglePassword"
         ></i>
       </div>
-      <div class="remember">
-        <label>
-          <input type="checkbox" v-model="rememberMe" />Remember me
-        </label>
-        <router-link to="/forgot-password">Forgot Password?</router-link>
+      <div class="input-box">
+        <input
+          v-model="confirmPassword"
+          :type="showConfirmPassword ? 'text' : 'password'"
+          id="confirmPassword"
+          placeholder="Confirm Password"
+          required
+          autocomplete="new-password"
+        />
+        <i
+          :class="showConfirmPassword ? 'ri-eye-fill toggle-password' : 'ri-eye-off-fill toggle-password'"
+          id="toggleConfirmPassword"
+          @click="toggleConfirmPassword"
+        ></i>
       </div>
-      <button type="submit" class="btnn">Login</button>
+      <button type="submit" class="btnn">Sign Up</button>
       <div class="signup">
-        <router-link to="/signup">Sign Up</router-link>
+        Already have an account? <router-link to="/login">Login</router-link>
       </div>
     </form>
   </div>
@@ -38,24 +47,28 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { signupApi } from '../api/signupApi'
 
 const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 const username = ref('')
 const password = ref('')
-const rememberMe = ref(false)
+const confirmPassword = ref('')
+
+const router = useRouter()
 
 function togglePassword() {
   showPassword.value = !showPassword.value
 }
-
-const router = useRouter()
-import { loginApi } from '../api/loginApi'
+function toggleConfirmPassword() {
+  showConfirmPassword.value = !showConfirmPassword.value
+}
 
 async function onSubmit() {
-  const result = await loginApi(username.value, password.value)
+  const result = await signupApi(username.value, password.value, confirmPassword.value)
   alert(result.message)
   if (result.success) {
-    router.push('/list')
+    router.push('/login')
   }
 }
 </script>

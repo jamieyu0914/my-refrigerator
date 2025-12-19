@@ -1,35 +1,14 @@
 <template>
   <div class="content">
     <form @submit.prevent="onSubmit">
-      <h2>Login</h2>
+      <h2>Forgot Password</h2>
       <div class="input-box">
-        <input v-model="username" type="text" placeholder="Username" required />
-        <i class="ri-user-fill"></i>
+        <input type="email" v-model="email" placeholder="Enter your email" required />
+        <i class="ri-mail-fill"></i>
       </div>
-      <div class="input-box">
-        <input
-          v-model="password"
-          :type="showPassword ? 'text' : 'password'"
-          id="password"
-          placeholder="Password"
-          required
-          autocomplete="new-password"
-        />
-        <i
-          :class="showPassword ? 'ri-eye-fill toggle-password' : 'ri-eye-off-fill toggle-password'"
-          id="togglePassword"
-          @click="togglePassword"
-        ></i>
-      </div>
-      <div class="remember">
-        <label>
-          <input type="checkbox" v-model="rememberMe" />Remember me
-        </label>
-        <router-link to="/forgot-password">Forgot Password?</router-link>
-      </div>
-      <button type="submit" class="btnn">Login</button>
+      <button type="submit" class="btnn">Send Reset Link</button>
       <div class="signup">
-        <router-link to="/signup">Sign Up</router-link>
+        Back to <router-link to="/login">Login</router-link>
       </div>
     </form>
   </div>
@@ -39,24 +18,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const showPassword = ref(false)
-const username = ref('')
-const password = ref('')
-const rememberMe = ref(false)
-
-function togglePassword() {
-  showPassword.value = !showPassword.value
-}
-
+const email = ref('')
 const router = useRouter()
-import { loginApi } from '../api/loginApi'
-
-async function onSubmit() {
-  const result = await loginApi(username.value, password.value)
-  alert(result.message)
-  if (result.success) {
-    router.push('/list')
-  }
+function onSubmit() {
+  // 這裡可串接 API 發送重設信件
+  alert('If this email exists, a reset link will be sent.')
+  router.push('/login')
 }
 </script>
 
