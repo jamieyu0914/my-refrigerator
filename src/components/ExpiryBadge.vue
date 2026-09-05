@@ -1,22 +1,12 @@
 <script setup>
 import { computed } from 'vue'
+import { getExpiryStatus } from '../utils/expiry'
 
 const props = defineProps({
   expiryDate: { type: String, default: null },
 })
 
-const SOON_DAYS = 3
-
-const status = computed(() => {
-  if (!props.expiryDate) return 'none'
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const expiry = new Date(props.expiryDate)
-  const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0) return 'expired'
-  if (diffDays <= SOON_DAYS) return 'soon'
-  return 'ok'
-})
+const status = computed(() => getExpiryStatus(props.expiryDate))
 
 const label = computed(() => {
   switch (status.value) {

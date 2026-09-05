@@ -12,21 +12,30 @@ Conventions for building the frontend of this project. Follow these whenever cre
 - **Framework**: Vue 3 (Composition API preferred)
 - **Language**: JavaScript (no TypeScript)
 - **Routing**: Vue Router 4
+- **State management**: Pinia (setup stores in `/stores`)
 
 ## Project Structure
 
 ```
 src/
-├── components/       # Reusable Vue components
+├── assets/           # Bundled static assets (images, icons) imported by components
+├── components/       # Reusable, presentational Vue components
+├── layouts/          # Layout shells (e.g. DefaultLayout with NavBar, AuthLayout without)
+├── views/            # Page-level components (route targets)
 ├── router/           # Route definitions
 │   └── index.js
-├── views/            # Page-level components (route targets)
-├── App.vue
+├── stores/           # Pinia stores (state + actions), one per domain (auth, items, ...)
+├── services/         # Data-access layer (localStorage today, API calls once a backend exists)
+├── types/            # JSDoc @typedef definitions for shared data shapes
+├── utils/            # Small stateless helpers (formatting, derived-status calculations, constants)
+├── App.vue           # Picks a layout from route.meta.layout and renders <router-view>
 └── main.js
 ```
 
 - Put reusable, presentational pieces in `/components`.
 - Put route-level page components in `/views` and reference them from `/router`.
+- Keep stores thin: state + actions in `/stores`, with actual persistence/IO delegated to a same-named module in `/services` (e.g. `stores/items.js` calls `services/itemsService.js`). This keeps the swap from localStorage to a real API contained to `/services`.
+- Set `meta: { layout: 'auth' }` on routes that shouldn't show the default chrome (e.g. `/login`); omit it to fall back to `DefaultLayout`.
 
 ## Router Setup
 
@@ -53,7 +62,7 @@ Register it in `main.js` via `app.use(router)`.
 
 ## Authentication (Login / Logout)
 
-- Keep auth state in a small store (e.g. Pinia, or a simple reactive composable if no store library is added) — expose `isLoggedIn`, `login()`, `logout()`, and current user info.
+- Keep auth state in `stores/auth.js` (Pinia) — expose `isLoggedIn`, `login()`, `logout()`, and current user info; delegate persistence to `services/authService.js`.
 - Persist the session token (e.g. `localStorage`) so a page refresh keeps the user logged in; clear it on logout.
 - Use a global `router.beforeEach` navigation guard to redirect unauthenticated users away from routes with `meta: { requiresAuth: true }`, and redirect logged-in users away from `/login`.
 - Provide a visible login/logout entry point in the main nav/header component under `/components` (e.g. `NavBar.vue`) that toggles based on auth state.

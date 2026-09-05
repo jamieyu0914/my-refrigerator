@@ -1,14 +1,15 @@
 <script setup>
 import { computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CATEGORIES, useItems } from '../composables/useItems'
+import { useItemsStore } from '../stores/items'
+import { CATEGORIES } from '../utils/constants'
 
 const route = useRoute()
 const router = useRouter()
-const { getItem, addItem, updateItem, deleteItem } = useItems()
+const itemsStore = useItemsStore()
 
 const editingId = computed(() => route.params.id || null)
-const existing = editingId.value ? getItem(editingId.value) : null
+const existing = editingId.value ? itemsStore.getItem(editingId.value) : null
 
 const form = reactive({
   name: existing?.name || '',
@@ -28,18 +29,18 @@ function handleSubmit() {
   }
 
   if (editingId.value) {
-    updateItem(editingId.value, payload)
+    itemsStore.updateItem(editingId.value, payload)
   } else {
-    addItem(payload)
+    itemsStore.addItem(payload)
   }
 
-  router.push({ name: 'home' })
+  router.push({ name: 'refrigerator' })
 }
 
 function handleDelete() {
   if (!editingId.value) return
-  deleteItem(editingId.value)
-  router.push({ name: 'home' })
+  itemsStore.deleteItem(editingId.value)
+  router.push({ name: 'refrigerator' })
 }
 </script>
 
@@ -74,7 +75,7 @@ function handleDelete() {
       <div class="actions">
         <button type="submit" class="submit">{{ editingId ? '儲存' : '新增' }}</button>
         <button v-if="editingId" type="button" class="delete" @click="handleDelete">刪除</button>
-        <RouterLink :to="{ name: 'home' }" class="cancel">取消</RouterLink>
+        <RouterLink :to="{ name: 'refrigerator' }" class="cancel">取消</RouterLink>
       </div>
     </form>
   </main>

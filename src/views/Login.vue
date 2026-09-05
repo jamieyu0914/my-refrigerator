@@ -1,16 +1,16 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
+import { useAuthStore } from '../stores/auth'
 
 const username = ref('')
 const route = useRoute()
 const router = useRouter()
-const { login } = useAuth()
+const auth = useAuthStore()
 
 function handleSubmit() {
   if (!username.value.trim()) return
-  login(username.value.trim())
+  auth.login(username.value.trim())
   router.push(route.query.redirect || { name: 'home' })
 }
 </script>

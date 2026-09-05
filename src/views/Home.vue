@@ -1,78 +1,82 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useAuth } from '../composables/useAuth'
-import { CATEGORIES, useItems } from '../composables/useItems'
-import CategoryFilter from '../components/CategoryFilter.vue'
-import ItemList from '../components/ItemList.vue'
+import { useAuthStore } from '../stores/auth'
 
-const { state: authState } = useAuth()
-const { state: itemsState, deleteItem } = useItems()
+const auth = useAuthStore()
 
-const selectedCategory = ref('')
-
-const visibleItems = computed(() => {
-  const items = selectedCategory.value
-    ? itemsState.items.filter((item) => item.category === selectedCategory.value)
-    : itemsState.items
-
-  return [...items].sort((a, b) => {
-    if (!a.expiryDate) return 1
-    if (!b.expiryDate) return -1
-    return a.expiryDate.localeCompare(b.expiryDate)
-  })
-})
-
-function handleDelete(id) {
-  deleteItem(id)
-}
+const sections = [
+  { name: 'refrigerator', icon: '🧊', label: '我的冰箱', description: '查看冰箱裡的食材' },
+  { name: 'shopping-list', icon: '🛒', label: '採買清單', description: '待買的食材清單' },
+  { name: 'recipes', icon: '📖', label: '食譜', description: '瀏覽推薦食譜' },
+  { name: 'favorites', icon: '❤️', label: '最愛食譜', description: '收藏的食譜' },
+  { name: 'promotions', icon: '🏷️', label: '特價食材', description: '目前特價中的食材' },
+]
 </script>
 
 <template>
   <main class="home">
-    <h1>你好，{{ authState.user?.name }} 👋</h1>
-    <CategoryFilter v-model="selectedCategory" :categories="CATEGORIES" />
-    <ItemList :items="visibleItems" @delete="handleDelete" />
-    <RouterLink :to="{ name: 'item-new' }" class="fab" aria-label="新增物品">+</RouterLink>
+    <h1>你好，{{ auth.user?.name }} 👋</h1>
+    <div class="grid">
+      <RouterLink
+        v-for="section in sections"
+        :key="section.name"
+        :to="{ name: section.name }"
+        class="card"
+      >
+        <span class="icon">{{ section.icon }}</span>
+        <span class="label">{{ section.label }}</span>
+        <span class="desc">{{ section.description }}</span>
+      </RouterLink>
+    </div>
   </main>
 </template>
 
 <style scoped>
 .home {
-  position: relative;
   padding: 16px;
-  padding-bottom: 96px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.fab {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  width: 56px;
-  height: 56px;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.card {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 28px;
-  line-height: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 44px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: inherit;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.desc {
+  font-size: 13px;
+  color: var(--text);
 }
 
 @media (min-width: 768px) {
   .home {
     padding: 32px;
-    padding-bottom: 32px;
   }
 
-  .fab {
-    right: 32px;
-    bottom: 32px;
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>
