@@ -1,7 +1,7 @@
-const STORAGE_KEY = 'refrigerator_items'
+const STORAGE_KEY = 'refrigerator_foods'
 
 // TODO: replace with real API calls once a backend exists
-export function loadItems() {
+export function loadFoods() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
   } catch {
@@ -9,6 +9,6 @@ export function loadItems() {
   }
 }
 
-export function saveItems(items) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+export function saveFoods(foods) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(foods))
 }

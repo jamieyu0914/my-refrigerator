@@ -1,15 +1,15 @@
 <script setup>
 import { computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useItemsStore } from '../stores/items'
+import { useFoodStore } from '../stores/food'
 import { CATEGORIES } from '../utils/constants'
 
 const route = useRoute()
 const router = useRouter()
-const itemsStore = useItemsStore()
+const foodStore = useFoodStore()
 
 const editingId = computed(() => route.params.id || null)
-const existing = editingId.value ? itemsStore.getItem(editingId.value) : null
+const existing = editingId.value ? foodStore.getFood(editingId.value) : null
 
 const form = reactive({
   name: existing?.name || '',
@@ -29,9 +29,9 @@ function handleSubmit() {
   }
 
   if (editingId.value) {
-    itemsStore.updateItem(editingId.value, payload)
+    foodStore.updateFood(editingId.value, payload)
   } else {
-    itemsStore.addItem(payload)
+    foodStore.addFood(payload)
   }
 
   router.push({ name: 'refrigerator' })
@@ -39,15 +39,15 @@ function handleSubmit() {
 
 function handleDelete() {
   if (!editingId.value) return
-  itemsStore.deleteItem(editingId.value)
+  foodStore.deleteFood(editingId.value)
   router.push({ name: 'refrigerator' })
 }
 </script>
 
 <template>
-  <main class="item-form-page">
+  <main class="food-form-page">
     <h1>{{ editingId ? '編輯物品' : '新增物品' }}</h1>
-    <form class="item-form" @submit.prevent="handleSubmit">
+    <form class="food-form" @submit.prevent="handleSubmit">
       <label class="field">
         <span>名稱</span>
         <input v-model="form.name" type="text" placeholder="例如：牛奶" required />
@@ -82,11 +82,11 @@ function handleDelete() {
 </template>
 
 <style scoped>
-.item-form-page {
+.food-form-page {
   padding: 16px;
 }
 
-.item-form {
+.food-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -147,7 +147,7 @@ function handleDelete() {
 }
 
 @media (min-width: 768px) {
-  .item-form-page {
+  .food-form-page {
     padding: 32px;
   }
 }

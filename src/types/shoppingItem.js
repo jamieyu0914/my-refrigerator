@@ -1,10 +1,9 @@
 /**
- * @typedef {Object} Item
+ * @typedef {Object} ShoppingItem
  * @property {string} id
  * @property {string} name
- * @property {string} category
  * @property {number} quantity
- * @property {string|null} expiryDate
+ * @property {boolean} checked
  * @property {string} addedAt
  */
 

@@ -1,20 +1,20 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { useItemsStore } from '../stores/items'
+import { useFoodStore } from '../stores/food'
 import { CATEGORIES } from '../utils/constants'
 import CategoryFilter from '../components/CategoryFilter.vue'
-import ItemList from '../components/ItemList.vue'
+import FoodList from '../components/FoodList.vue'
 
-const itemsStore = useItemsStore()
+const foodStore = useFoodStore()
 
 const selectedCategory = ref('')
 
-const visibleItems = computed(() => {
-  const items = selectedCategory.value
-    ? itemsStore.items.filter((item) => item.category === selectedCategory.value)
-    : itemsStore.items
+const visibleFoods = computed(() => {
+  const foods = selectedCategory.value
+    ? foodStore.foods.filter((food) => food.category === selectedCategory.value)
+    : foodStore.foods
 
-  return [...items].sort((a, b) => {
+  return [...foods].sort((a, b) => {
     if (!a.expiryDate) return 1
     if (!b.expiryDate) return -1
     return a.expiryDate.localeCompare(b.expiryDate)
@@ -22,7 +22,7 @@ const visibleItems = computed(() => {
 })
 
 function handleDelete(id) {
-  itemsStore.deleteItem(id)
+  foodStore.deleteFood(id)
 }
 </script>
 
@@ -30,8 +30,8 @@ function handleDelete(id) {
   <main class="refrigerator">
     <h1>我的冰箱</h1>
     <CategoryFilter v-model="selectedCategory" :categories="CATEGORIES" />
-    <ItemList :items="visibleItems" @delete="handleDelete" />
-    <RouterLink :to="{ name: 'item-new' }" class="fab" aria-label="新增物品">+</RouterLink>
+    <FoodList :foods="visibleFoods" @delete="handleDelete" />
+    <RouterLink :to="{ name: 'food-new' }" class="fab" aria-label="新增物品">+</RouterLink>
   </main>
 </template>
 

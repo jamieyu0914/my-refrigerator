@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import ExpiryBadge from './ExpiryBadge.vue'
 
 const props = defineProps({
-  item: { type: Object, required: true },
+  food: { type: Object, required: true },
 })
 
 const emit = defineEmits(['delete'])
@@ -11,27 +11,27 @@ const emit = defineEmits(['delete'])
 const router = useRouter()
 
 function edit() {
-  router.push({ name: 'item-edit', params: { id: props.item.id } })
+  router.push({ name: 'food-edit', params: { id: props.food.id } })
 }
 </script>
 
 <template>
-  <article class="item-card">
-    <button type="button" class="item-main" @click="edit">
-      <div class="item-info">
-        <h3>{{ item.name }}</h3>
-        <p class="item-meta">{{ item.category }} · 數量 {{ item.quantity }}</p>
+  <article class="food-card">
+    <button type="button" class="food-main" @click="edit">
+      <div class="food-info">
+        <h3>{{ food.name }}</h3>
+        <p class="food-meta">{{ food.category }} · 數量 {{ food.quantity }}</p>
       </div>
-      <ExpiryBadge :expiry-date="item.expiryDate" />
+      <ExpiryBadge :expiry-date="food.expiryDate" />
     </button>
-    <button type="button" class="item-delete" aria-label="刪除" @click="emit('delete', item.id)">
+    <button type="button" class="food-delete" aria-label="刪除" @click="emit('delete', food.id)">
       🗑
     </button>
   </article>
 </template>
 
 <style scoped>
-.item-card {
+.food-card {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -40,7 +40,7 @@ function edit() {
   padding: 4px;
 }
 
-.item-main {
+.food-main {
   flex: 1;
   display: flex;
   align-items: center;
@@ -55,19 +55,19 @@ function edit() {
   font: inherit;
 }
 
-.item-info h3 {
+.food-info h3 {
   margin: 0;
   font-size: 16px;
   color: var(--text-h);
 }
 
-.item-meta {
+.food-meta {
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--text);
 }
 
-.item-delete {
+.food-delete {
   min-width: 44px;
   min-height: 44px;
   border: none;
