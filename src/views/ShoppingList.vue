@@ -1,17 +1,23 @@
 <script setup>
-import { reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useShoppingListStore } from '../stores/shoppingList'
 
 const shoppingListStore = useShoppingListStore()
+const isLoading = ref(true)
 
 const form = reactive({
   name: '',
   quantity: 1,
 })
 
-function handleAdd() {
+onMounted(async () => {
+  await shoppingListStore.loadItems()
+  isLoading.value = false
+})
+
+async function handleAdd() {
   if (!form.name.trim()) return
-  shoppingListStore.addItem({ name: form.name.trim(), quantity: Number(form.quantity) || 1 })
+  await shoppingListStore.addItem({ name: form.name.trim(), quantity: Number(form.quantity) || 1 })
   form.name = ''
   form.quantity = 1
 }
@@ -27,7 +33,8 @@ function handleAdd() {
       <button type="submit">新增</button>
     </form>
 
-    <p v-if="shoppingListStore.items.length === 0" class="empty">採買清單是空的。</p>
+    <p v-if="isLoading" class="empty">載入中…</p>
+    <p v-else-if="shoppingListStore.items.length === 0" class="empty">採買清單是空的。</p>
     <ul v-else class="list">
       <li v-for="item in shoppingListStore.items" :key="item.id" class="list-item">
         <label class="check">

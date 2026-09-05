@@ -1,43 +1,40 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { loadFoods, saveFoods } from '../services/foodService'
+import {
+  deleteFood as deleteFoodRow,
+  fetchFoodById,
+  fetchFoods,
+  insertFood,
+  updateFood as updateFoodRow,
+} from '../services/foodService'
 
 export const useFoodStore = defineStore('food', () => {
-  const foods = ref(loadFoods())
+  const foods = ref([])
 
-  function persist() {
-    saveFoods(foods.value)
+  async function loadFoods() {
+    foods.value = await fetchFoods()
   }
 
-  function addFood({ name, category, quantity, expiryDate }) {
-    foods.value.push({
-      id: crypto.randomUUID(),
-      name,
-      category,
-      quantity,
-      expiryDate: expiryDate || null,
-      addedAt: new Date().toISOString(),
-    })
-    persist()
+  async function addFood(payload) {
+    const food = await insertFood(payload)
+    foods.value.push(food)
   }
 
-  function updateFood(id, updates) {
-    const food = foods.value.find((f) => f.id === id)
-    if (!food) return
-    Object.assign(food, updates)
-    persist()
-  }
-
-  function deleteFood(id) {
+  async function updateFood(id, updates) {
+    const updated = await updateFoodRow(id, updates)
     const index = foods.value.findIndex((f) => f.id === id)
-    if (index === -1) return
-    foods.value.splice(index, 1)
-    persist()
+    if (index !== -1) foods.value[index] = updated
   }
 
-  function getFood(id) {
-    return foods.value.find((f) => f.id === id) || null
+  async function deleteFood(id) {
+    await deleteFoodRow(id)
+    const index = foods.value.findIndex((f) => f.id === id)
+    if (index !== -1) foods.value.splice(index, 1)
   }
 
-  return { foods, addFood, updateFood, deleteFood, getFood }
+  function fetchFood(id) {
+    return fetchFoodById(id)
+  }
+
+  return { foods, loadFoods, addFood, updateFood, deleteFood, fetchFood }
 })

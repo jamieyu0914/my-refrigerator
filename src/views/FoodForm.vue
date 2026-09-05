@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFoodStore } from '../stores/food'
 import { CATEGORIES } from '../utils/constants'
@@ -9,16 +9,27 @@ const router = useRouter()
 const foodStore = useFoodStore()
 
 const editingId = computed(() => route.params.id || null)
-const existing = editingId.value ? foodStore.getFood(editingId.value) : null
+const isLoading = ref(!!editingId.value)
 
 const form = reactive({
-  name: existing?.name || '',
-  category: existing?.category || CATEGORIES[0],
-  quantity: existing?.quantity ?? 1,
-  expiryDate: existing?.expiryDate || '',
+  name: '',
+  category: CATEGORIES[0],
+  quantity: 1,
+  expiryDate: '',
 })
 
-function handleSubmit() {
+onMounted(async () => {
+  if (!editingId.value) return
+
+  const existing = await foodStore.fetchFood(editingId.value)
+  form.name = existing.name
+  form.category = existing.category
+  form.quantity = existing.quantity
+  form.expiryDate = existing.expiryDate || ''
+  isLoading.value = false
+})
+
+async function handleSubmit() {
   if (!form.name.trim()) return
 
   const payload = {
@@ -29,17 +40,17 @@ function handleSubmit() {
   }
 
   if (editingId.value) {
-    foodStore.updateFood(editingId.value, payload)
+    await foodStore.updateFood(editingId.value, payload)
   } else {
-    foodStore.addFood(payload)
+    await foodStore.addFood(payload)
   }
 
   router.push({ name: 'refrigerator' })
 }
 
-function handleDelete() {
+async function handleDelete() {
   if (!editingId.value) return
-  foodStore.deleteFood(editingId.value)
+  await foodStore.deleteFood(editingId.value)
   router.push({ name: 'refrigerator' })
 }
 </script>
@@ -47,7 +58,8 @@ function handleDelete() {
 <template>
   <main class="food-form-page">
     <h1>{{ editingId ? '編輯物品' : '新增物品' }}</h1>
-    <form class="food-form" @submit.prevent="handleSubmit">
+    <p v-if="isLoading" class="loading">載入中…</p>
+    <form v-else class="food-form" @submit.prevent="handleSubmit">
       <label class="field">
         <span>名稱</span>
         <input v-model="form.name" type="text" placeholder="例如：牛奶" required />
@@ -84,6 +96,10 @@ function handleDelete() {
 <style scoped>
 .food-form-page {
   padding: 16px;
+}
+
+.loading {
+  color: var(--text);
 }
 
 .food-form {

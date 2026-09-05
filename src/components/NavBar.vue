@@ -14,8 +14,8 @@ const navLinks = [
   { name: 'promotions', label: '特價食材' },
 ]
 
-function handleLogout() {
-  auth.logout()
+async function handleLogout() {
+  await auth.logout()
   router.push({ name: 'login' })
 }
 </script>

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useFoodStore } from '../stores/food'
 import { CATEGORIES } from '../utils/constants'
 import CategoryFilter from '../components/CategoryFilter.vue'
@@ -8,18 +8,18 @@ import FoodList from '../components/FoodList.vue'
 const foodStore = useFoodStore()
 
 const selectedCategory = ref('')
+const isLoading = ref(true)
 
-const visibleFoods = computed(() => {
-  const foods = selectedCategory.value
-    ? foodStore.foods.filter((food) => food.category === selectedCategory.value)
-    : foodStore.foods
-
-  return [...foods].sort((a, b) => {
-    if (!a.expiryDate) return 1
-    if (!b.expiryDate) return -1
-    return a.expiryDate.localeCompare(b.expiryDate)
-  })
+onMounted(async () => {
+  await foodStore.loadFoods()
+  isLoading.value = false
 })
+
+const visibleFoods = computed(() =>
+  selectedCategory.value
+    ? foodStore.foods.filter((food) => food.category === selectedCategory.value)
+    : foodStore.foods,
+)
 
 function handleDelete(id) {
   foodStore.deleteFood(id)
@@ -30,7 +30,8 @@ function handleDelete(id) {
   <main class="refrigerator">
     <h1>我的冰箱</h1>
     <CategoryFilter v-model="selectedCategory" :categories="CATEGORIES" />
-    <FoodList :foods="visibleFoods" @delete="handleDelete" />
+    <p v-if="isLoading" class="loading">載入中…</p>
+    <FoodList v-else :foods="visibleFoods" @delete="handleDelete" />
     <RouterLink :to="{ name: 'food-new' }" class="fab" aria-label="新增物品">+</RouterLink>
   </main>
 </template>
@@ -43,6 +44,10 @@ function handleDelete(id) {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.loading {
+  color: var(--text);
 }
 
 .fab {

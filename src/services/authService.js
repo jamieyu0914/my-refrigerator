@@ -1,19 +1,42 @@
-const TOKEN_KEY = 'refrigerator_auth_token'
-const USER_KEY = 'refrigerator_auth_user'
+import { supabase } from './supabaseClient'
 
-export function loadSession() {
-  const token = localStorage.getItem(TOKEN_KEY)
-  if (!token) return null
-  return { user: JSON.parse(localStorage.getItem(USER_KEY) || 'null') }
+async function fetchProfile(userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('name')
+    .eq('id', userId)
+    .single()
+
+  if (error) throw error
+  return { name: data.name }
 }
 
-// TODO: replace with a real API call once a backend exists
-export function saveSession(user) {
-  localStorage.setItem(TOKEN_KEY, 'demo-token')
-  localStorage.setItem(USER_KEY, JSON.stringify(user))
+async function toUser(session) {
+  if (!session) return null
+  const profile = await fetchProfile(session.user.id)
+  return { id: session.user.id, email: session.user.email, ...profile }
 }
 
-export function clearSession() {
-  localStorage.removeItem(TOKEN_KEY)
-  localStorage.removeItem(USER_KEY)
+export async function getSession() {
+  const { data, error } = await supabase.auth.getSession()
+  if (error) throw error
+  return toUser(data.session)
+}
+
+export async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw error
+  return toUser(data.session)
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
+}
+
+export function onAuthStateChange(callback) {
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    callback(session)
+  })
+  return data.subscription
 }

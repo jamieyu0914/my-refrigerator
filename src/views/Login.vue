@@ -3,15 +3,29 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-const username = ref('')
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('')
+const isSubmitting = ref(false)
+
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-function handleSubmit() {
-  if (!username.value.trim()) return
-  auth.login(username.value.trim())
-  router.push(route.query.redirect || { name: 'home' })
+async function handleSubmit() {
+  if (!email.value.trim() || !password.value) return
+
+  errorMessage.value = ''
+  isSubmitting.value = true
+
+  try {
+    await auth.login(email.value.trim(), password.value)
+    router.push(route.query.redirect || { name: 'home' })
+  } catch {
+    errorMessage.value = '登入失敗，請確認 Email 或密碼是否正確。'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -20,10 +34,29 @@ function handleSubmit() {
     <form class="login-card" @submit.prevent="handleSubmit">
       <h1>登入</h1>
       <label class="field">
-        <span>使用者名稱</span>
-        <input v-model="username" type="text" placeholder="輸入使用者名稱" autocomplete="username" />
+        <span>Email</span>
+        <input
+          v-model="email"
+          type="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
       </label>
-      <button type="submit" class="submit">登入</button>
+      <label class="field">
+        <span>密碼</span>
+        <input
+          v-model="password"
+          type="password"
+          placeholder="輸入密碼"
+          autocomplete="current-password"
+          required
+        />
+      </label>
+      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <button type="submit" class="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? '登入中…' : '登入' }}
+      </button>
     </form>
   </main>
 </template>
@@ -58,6 +91,12 @@ function handleSubmit() {
   font-size: 16px;
 }
 
+.error {
+  margin: 0;
+  color: #c53232;
+  font-size: 14px;
+}
+
 .submit {
   min-height: 44px;
   border: none;
@@ -65,6 +104,10 @@ function handleSubmit() {
   background: var(--accent);
   color: #fff;
   font-size: 16px;
+}
+
+.submit:disabled {
+  opacity: 0.6;
 }
 
 @media (min-width: 768px) {

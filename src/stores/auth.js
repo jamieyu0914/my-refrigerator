@@ -1,22 +1,27 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { clearSession, loadSession, saveSession } from '../services/authService'
+import { getSession, onAuthStateChange, signIn, signOut } from '../services/authService'
 
 export const useAuthStore = defineStore('auth', () => {
-  const session = loadSession()
-  const user = ref(session?.user || null)
+  const user = ref(null)
   const isLoggedIn = computed(() => !!user.value)
 
-  function login(username) {
-    const nextUser = { name: username }
-    saveSession(nextUser)
-    user.value = nextUser
+  async function init() {
+    user.value = await getSession()
+
+    onAuthStateChange((session) => {
+      if (!session) user.value = null
+    })
   }
 
-  function logout() {
-    clearSession()
+  async function login(email, password) {
+    user.value = await signIn(email, password)
+  }
+
+  async function logout() {
+    await signOut()
     user.value = null
   }
 
-  return { user, isLoggedIn, login, logout }
+  return { user, isLoggedIn, init, login, logout }
 })

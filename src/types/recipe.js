@@ -6,6 +6,7 @@
  * @property {string} instructions
  * @property {string|null} imageUrl
  * @property {string[]} tags
+ * @property {boolean} isFavorite
  */
 
 export {}
