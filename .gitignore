@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # Local Claude settings
 .claude/settings.local.json
+
+# Coverage
+coverage/

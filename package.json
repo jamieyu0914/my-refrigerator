@@ -1,13 +1,14 @@
 {
   "name": "my-refrigerator",
   "private": true,
-  "version": "0.0.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run --coverage",
+    "license-checker": "license-checker --production --out THIRD-PARTY-LICENSES.txt"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",
@@ -17,8 +18,10 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.8",
+    "@vitest/coverage-v8": "^5.0.0",
     "@vue/test-utils": "^2.5.0",
     "jsdom": "^29.1.1",
+    "license-checker": "^25.0.1",
     "vite": "^8.2.2",
     "vitest": "^5.0.0"
   }
