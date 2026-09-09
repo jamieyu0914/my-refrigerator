@@ -172,4 +172,204 @@ describe('ShoppingList.vue', () => {
     expect(togglePurchased).toHaveBeenCalledWith('1')
     expect(addFood).not.toHaveBeenCalled()
   })
+
+  it('shows an error message when toggling purchased fails', async () => {
+    const togglePurchased = vi.fn().mockRejectedValue(new Error('fail'))
+    const items = [
+      { id: '1', name: '雞蛋', quantity: 1, unit: '盒', category: '其他', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items, togglePurchased })
+    await flushPromises()
+
+    wrapper.findComponent(ShoppingItemRow).vm.$emit('toggle', '1')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('更新狀態失敗')
+  })
+
+  it('defaults quantity to 1 when the quantity field is not a valid number', async () => {
+    const addItem = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mountWithStore({ addItem })
+    await flushPromises()
+
+    await wrapper.find('input[type="text"]').setValue('麵包')
+    await wrapper.find('input[type="number"]').setValue('')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(addItem).toHaveBeenCalledWith(expect.objectContaining({ quantity: 1 }))
+  })
+
+  it('ignores a second toggle for the same item while one is in flight', async () => {
+    let resolveToggle
+    const togglePurchased = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveToggle = resolve
+        }),
+    )
+    const items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items, togglePurchased })
+    await flushPromises()
+
+    const row = wrapper.findComponent(ShoppingItemRow)
+    row.vm.$emit('toggle', '1')
+    row.vm.$emit('toggle', '1')
+    await flushPromises()
+
+    expect(togglePurchased).toHaveBeenCalledTimes(1)
+
+    resolveToggle()
+    await flushPromises()
+  })
+
+  it('ignores a toggle for an unknown item id', async () => {
+    const togglePurchased = vi.fn().mockResolvedValue(undefined)
+    const items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items, togglePurchased })
+    await flushPromises()
+
+    wrapper.findComponent(ShoppingItemRow).vm.$emit('toggle', 'missing')
+    await flushPromises()
+
+    expect(togglePurchased).not.toHaveBeenCalled()
+  })
+
+  it('ignores a second edit-save while one is in flight', async () => {
+    let resolveUpdate
+    const updateItem = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveUpdate = resolve
+        }),
+    )
+    const items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items, updateItem })
+    await flushPromises()
+
+    const row = wrapper.findComponent(ShoppingItemRow)
+    row.vm.$emit('edit-save', { id: '1', updates: { name: 'a' } })
+    row.vm.$emit('edit-save', { id: '1', updates: { name: 'b' } })
+    await flushPromises()
+
+    expect(updateItem).toHaveBeenCalledTimes(1)
+
+    resolveUpdate()
+    await flushPromises()
+  })
+
+  it('adds a new item on submit, then resets the form', async () => {
+    const addItem = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mountWithStore({ addItem })
+    await flushPromises()
+
+    await wrapper.find('input[type="text"]').setValue('麵包')
+    await wrapper.find('input[type="number"]').setValue(2)
+    await wrapper.find('.unit-input').setValue('條')
+    await wrapper.find('.category-select').setValue('肉類')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(addItem).toHaveBeenCalledWith({
+      name: '麵包',
+      quantity: 2,
+      unit: '條',
+      category: '肉類',
+    })
+    expect(wrapper.find('input[type="text"]').element.value).toBe('')
+  })
+
+  it('does not add an item when the name is blank', async () => {
+    const addItem = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mountWithStore({ addItem })
+    await flushPromises()
+
+    await wrapper.find('input[type="text"]').setValue('   ')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(addItem).not.toHaveBeenCalled()
+  })
+
+  it('shows an error message when adding an item fails', async () => {
+    const addItem = vi.fn().mockRejectedValue(new Error('fail'))
+    const wrapper = mountWithStore({ addItem })
+    await flushPromises()
+
+    await wrapper.find('input[type="text"]').setValue('麵包')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('新增失敗')
+  })
+
+  it('cancels editing without saving', async () => {
+    const items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items })
+    await flushPromises()
+
+    const row = wrapper.findComponent(ShoppingItemRow)
+    row.vm.$emit('edit-start', '1')
+    await flushPromises()
+    expect(wrapper.findComponent(ShoppingItemRow).props('editing')).toBe(true)
+
+    wrapper.findComponent(ShoppingItemRow).vm.$emit('edit-cancel')
+    await flushPromises()
+
+    expect(wrapper.findComponent(ShoppingItemRow).props('editing')).toBe(false)
+  })
+
+  it('shows an error message when saving an edit fails', async () => {
+    const updateItem = vi.fn().mockRejectedValue(new Error('fail'))
+    const items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items, updateItem })
+    await flushPromises()
+
+    wrapper
+      .findComponent(ShoppingItemRow)
+      .vm.$emit('edit-save', { id: '1', updates: { name: '全脂牛奶' } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('修改失敗')
+  })
+
+  it('does not delete when the confirmation is dismissed', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => false))
+    const deleteItem = vi.fn().mockResolvedValue(undefined)
+    const items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items, deleteItem })
+    await flushPromises()
+
+    wrapper.findComponent(ShoppingItemRow).vm.$emit('delete', '1')
+    await flushPromises()
+
+    expect(deleteItem).not.toHaveBeenCalled()
+  })
+
+  it('shows an error message when deleting fails', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    const deleteItem = vi.fn().mockRejectedValue(new Error('fail'))
+    const items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    const wrapper = mountWithStore({ items, deleteItem })
+    await flushPromises()
+
+    wrapper.findComponent(ShoppingItemRow).vm.$emit('delete', '1')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('刪除失敗')
+  })
 })

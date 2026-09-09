@@ -57,6 +57,28 @@ describe('food store', () => {
     expect(store.foods).toEqual([])
   })
 
+  it('updateFood and deleteFood are no-ops for an unknown id', async () => {
+    const store = useFoodStore()
+    store.foods = [{ id: '1', name: '牛奶', quantity: 1 }]
+    foodService.updateFood.mockResolvedValue({ id: 'missing', name: 'x' })
+    foodService.deleteFood.mockResolvedValue(undefined)
+
+    await store.updateFood('missing', { quantity: 2 })
+    await store.deleteFood('missing')
+
+    expect(store.foods).toEqual([{ id: '1', name: '牛奶', quantity: 1 }])
+  })
+
+  it('fetchFood delegates to the service', async () => {
+    foodService.fetchFoodById.mockResolvedValue({ id: '1', name: '牛奶' })
+
+    const store = useFoodStore()
+    const food = await store.fetchFood('1')
+
+    expect(foodService.fetchFoodById).toHaveBeenCalledWith('1')
+    expect(food).toEqual({ id: '1', name: '牛奶' })
+  })
+
   it('propagates a rejected service call instead of swallowing it', async () => {
     foodService.fetchFoods.mockRejectedValue(new Error('network error'))
 

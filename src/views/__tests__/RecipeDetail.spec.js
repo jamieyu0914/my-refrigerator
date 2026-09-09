@@ -108,7 +108,7 @@ describe('RecipeDetail.vue', () => {
     await flushPromises()
 
     const favoriteButton = wrapper.find('.favorite')
-    await favoriteButton.trigger('click')
+    favoriteButton.trigger('click')
     await favoriteButton.trigger('click')
 
     expect(toggleFavorite).toHaveBeenCalledTimes(1)
@@ -118,6 +118,75 @@ describe('RecipeDetail.vue', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('已加入最愛')
+  })
+
+  it('shows an error message when toggling a favorite fails', async () => {
+    const toggleFavorite = vi.fn().mockRejectedValue(new Error('fail'))
+    const wrapper = mountWithStore({
+      fetchRecipe: vi.fn().mockResolvedValue(baseRecipe),
+      toggleFavorite,
+    })
+    await flushPromises()
+
+    await wrapper.find('.favorite').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('更新最愛狀態失敗')
+  })
+
+  it('renders a cover image when the recipe has an imageUrl', async () => {
+    const wrapper = mountWithStore({
+      fetchRecipe: vi.fn().mockResolvedValue({ ...baseRecipe, imageUrl: 'https://example.com/a.jpg' }),
+    })
+    await flushPromises()
+
+    expect(wrapper.find('.cover').attributes('src')).toBe('https://example.com/a.jpg')
+  })
+
+  it('shows only the difficulty when cookTimeMinutes is absent', async () => {
+    const wrapper = mountWithStore({
+      fetchRecipe: vi.fn().mockResolvedValue({ ...baseRecipe, cookTimeMinutes: null, difficulty: '簡單' }),
+    })
+    await flushPromises()
+
+    expect(wrapper.find('.meta').text()).toBe('難度：簡單')
+  })
+
+  it('renders an ingredient without its amount when the amount is missing', async () => {
+    const wrapper = mountWithStore({
+      fetchRecipe: vi.fn().mockResolvedValue({
+        ...baseRecipe,
+        ingredients: [{ id: 'i1', name: '番茄', amount: '' }],
+      }),
+    })
+    await flushPromises()
+
+    expect(wrapper.find('.ingredients').text()).toBe('番茄')
+  })
+
+  it('prevents a second delete request while one is in flight', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    let resolveDelete
+    const deleteRecipe = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveDelete = resolve
+        }),
+    )
+    const wrapper = mountWithStore({
+      fetchRecipe: vi.fn().mockResolvedValue({ ...baseRecipe, isOwn: true }),
+      deleteRecipe,
+    })
+    await flushPromises()
+
+    const deleteButton = wrapper.find('.delete')
+    deleteButton.trigger('click')
+    await deleteButton.trigger('click')
+
+    expect(deleteRecipe).toHaveBeenCalledTimes(1)
+
+    resolveDelete()
+    await flushPromises()
   })
 
   it('deletes the recipe and navigates back to the list when confirmed', async () => {

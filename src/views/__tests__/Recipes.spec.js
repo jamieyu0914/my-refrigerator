@@ -105,4 +105,33 @@ describe('Recipes.vue', () => {
 
     expect(wrapper.findComponent(RecipeList).props('togglingIds')).toEqual([])
   })
+
+  it('ignores a toggle for an unknown recipe id', async () => {
+    const toggleFavorite = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mountWithStore({
+      recipes: [{ id: '1', title: '番茄炒蛋', imageUrl: null, tags: [], isFavorite: false }],
+      toggleFavorite,
+    })
+    await flushPromises()
+
+    wrapper.findComponent(RecipeList).vm.$emit('toggle-favorite', 'missing')
+    await flushPromises()
+
+    expect(toggleFavorite).not.toHaveBeenCalled()
+  })
+
+  it('shows an error message when toggling a favorite fails', async () => {
+    const toggleFavorite = vi.fn().mockRejectedValue(new Error('fail'))
+    const wrapper = mountWithStore({
+      recipes: [{ id: '1', title: '番茄炒蛋', imageUrl: null, tags: [], isFavorite: false }],
+      toggleFavorite,
+    })
+    await flushPromises()
+
+    wrapper.findComponent(RecipeList).vm.$emit('toggle-favorite', '1')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('更新最愛狀態失敗')
+    expect(wrapper.findComponent(RecipeList).props('togglingIds')).toEqual([])
+  })
 })

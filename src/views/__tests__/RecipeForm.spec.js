@@ -84,6 +84,28 @@ describe('RecipeForm.vue (create mode)', () => {
     expect(mockPush).toHaveBeenCalledWith({ name: 'recipes' })
   })
 
+  it('submits the optional imageUrl/cookTimeMinutes/difficulty/description fields when filled in', async () => {
+    const addRecipe = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mountWithStore({ addRecipe })
+
+    await fillMinimumValidForm(wrapper)
+    await wrapper.find('input[type="url"]').setValue('https://example.com/a.jpg')
+    await wrapper.find('input[type="number"]').setValue(20)
+    await wrapper.find('select').setValue('困難')
+    await wrapper.find('textarea').setValue('家常快炒')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(addRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageUrl: 'https://example.com/a.jpg',
+        cookTimeMinutes: 20,
+        difficulty: '困難',
+        description: '家常快炒',
+      }),
+    )
+  })
+
   it('shows an error message when the create submission fails', async () => {
     const addRecipe = vi.fn().mockRejectedValue(new Error('fail'))
     const wrapper = mountWithStore({ addRecipe })
@@ -118,10 +140,36 @@ describe('RecipeForm.vue (create mode)', () => {
     expect(wrapper.find('.remove').attributes('disabled')).toBeDefined()
   })
 
+  it('adds and removes step rows, disabling remove when only one is left', async () => {
+    const wrapper = mountWithStore()
+
+    expect(wrapper.findAll('input[placeholder="描述這個步驟"]')).toHaveLength(1)
+
+    await wrapper.findAll('.add-row')[1].trigger('click')
+    expect(wrapper.findAll('input[placeholder="描述這個步驟"]')).toHaveLength(2)
+
+    const removeButtons = wrapper.findAll('[aria-label="移除這個步驟"]')
+    expect(removeButtons).toHaveLength(2)
+    expect(removeButtons[0].attributes('disabled')).toBeUndefined()
+
+    await removeButtons[0].trigger('click')
+    expect(wrapper.findAll('input[placeholder="描述這個步驟"]')).toHaveLength(1)
+    expect(wrapper.find('[aria-label="移除這個步驟"]').attributes('disabled')).toBeDefined()
+  })
+
   it('does not show a delete button', () => {
     const wrapper = mountWithStore()
 
     expect(wrapper.find('.delete').exists()).toBe(false)
+  })
+
+  it('handleDelete is a no-op when there is no recipe being edited', async () => {
+    const deleteRecipe = vi.fn()
+    const wrapper = mountWithStore({ deleteRecipe })
+
+    await wrapper.vm.handleDelete()
+
+    expect(deleteRecipe).not.toHaveBeenCalled()
   })
 })
 
@@ -159,6 +207,37 @@ describe('RecipeForm.vue (edit mode)', () => {
     expect(wrapper.text()).toContain('編輯食譜')
   })
 
+  it('falls back to defaults when the existing recipe has empty optional fields', async () => {
+    const minimalRecipe = {
+      id: '6',
+      title: '白飯',
+      imageUrl: null,
+      cookTimeMinutes: null,
+      difficulty: null,
+      description: null,
+      tags: [],
+      ingredients: [],
+      steps: [],
+    }
+    const wrapper = mountWithStore({ fetchRecipe: vi.fn().mockResolvedValue(minimalRecipe) })
+
+    await flushPromises()
+
+    expect(wrapper.find('input[placeholder="例如：番茄炒蛋"]').element.value).toBe('白飯')
+    expect(wrapper.find('select').element.value).toBe('簡單')
+    expect(wrapper.find('input[placeholder="名稱，例如：雞蛋"]').element.value).toBe('')
+    expect(wrapper.find('input[placeholder="描述這個步驟"]').element.value).toBe('')
+  })
+
+  it('leaves an ingredient amount blank when the existing recipe ingredient has none', async () => {
+    const recipeWithoutAmount = { ...existingRecipe, ingredients: [{ id: 'i1', name: '味噌', amount: '' }] }
+    const wrapper = mountWithStore({ fetchRecipe: vi.fn().mockResolvedValue(recipeWithoutAmount) })
+
+    await flushPromises()
+
+    expect(wrapper.find('input[placeholder="份量，例如：3 顆"]').element.value).toBe('')
+  })
+
   it('shows an error message when loading the existing recipe fails', async () => {
     const wrapper = mountWithStore({ fetchRecipe: vi.fn().mockRejectedValue(new Error('fail')) })
 
@@ -186,6 +265,24 @@ describe('RecipeForm.vue (edit mode)', () => {
     expect(mockPush).toHaveBeenCalledWith({ name: 'recipe-detail', params: { id: '5' } })
   })
 
+  it('does not delete the recipe when the confirmation is dismissed', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => false))
+    const deleteRecipe = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mountWithStore({
+      fetchRecipe: vi.fn().mockResolvedValue(existingRecipe),
+      deleteRecipe,
+    })
+    await flushPromises()
+
+    await wrapper.find('.delete').trigger('click')
+    await flushPromises()
+
+    expect(deleteRecipe).not.toHaveBeenCalled()
+    expect(mockPush).not.toHaveBeenCalled()
+
+    vi.unstubAllGlobals()
+  })
+
   it('deletes the recipe on confirm and navigates back to the list', async () => {
     vi.stubGlobal('confirm', vi.fn(() => true))
     const deleteRecipe = vi.fn().mockResolvedValue(undefined)
@@ -200,6 +297,23 @@ describe('RecipeForm.vue (edit mode)', () => {
 
     expect(deleteRecipe).toHaveBeenCalledWith('5')
     expect(mockPush).toHaveBeenCalledWith({ name: 'recipes' })
+
+    vi.unstubAllGlobals()
+  })
+
+  it('shows an error message when deletion fails', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    const deleteRecipe = vi.fn().mockRejectedValue(new Error('fail'))
+    const wrapper = mountWithStore({
+      fetchRecipe: vi.fn().mockResolvedValue(existingRecipe),
+      deleteRecipe,
+    })
+    await flushPromises()
+
+    await wrapper.find('.delete').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('刪除失敗')
 
     vi.unstubAllGlobals()
   })

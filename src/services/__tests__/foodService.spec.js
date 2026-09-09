@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { deleteFood, fetchFoods, insertFood, updateFood } from '../foodService'
+import { deleteFood, fetchFoodById, fetchFoods, insertFood, updateFood } from '../foodService'
 import * as repository from '../../repositories/refrigeratorRepository'
 import { getCurrentUserId } from '../supabaseClient'
 
@@ -46,6 +46,29 @@ describe('foodService', () => {
     ])
   })
 
+  it('fetchFoodById maps a single snake_case row to a camelCase Food object', async () => {
+    repository.getItemById.mockResolvedValue({
+      id: '1',
+      name: '牛奶',
+      category_code: '乳製品',
+      quantity: 2,
+      expiry_date: '2026-09-20',
+      added_at: '2026-09-01T00:00:00Z',
+    })
+
+    const food = await fetchFoodById('1')
+
+    expect(repository.getItemById).toHaveBeenCalledWith('1')
+    expect(food).toEqual({
+      id: '1',
+      name: '牛奶',
+      category: '乳製品',
+      quantity: 2,
+      expiryDate: '2026-09-20',
+      addedAt: '2026-09-01T00:00:00Z',
+    })
+  })
+
   it('insertFood resolves the current user and maps camelCase input to a snake_case row', async () => {
     getCurrentUserId.mockResolvedValue('user-1')
     repository.createItem.mockResolvedValue({
@@ -82,6 +105,40 @@ describe('foodService', () => {
     await updateFood('3', { quantity: 1 })
 
     expect(repository.updateItem).toHaveBeenCalledWith('3', { quantity: 1 })
+  })
+
+  it('updateFood maps name/category/expiryDate updates together', async () => {
+    repository.updateItem.mockResolvedValue({
+      id: '3',
+      name: '全脂牛奶',
+      category_code: '其他',
+      quantity: 1,
+      expiry_date: '2026-09-20',
+      added_at: '2026-09-01T00:00:00Z',
+    })
+
+    await updateFood('3', { name: '全脂牛奶', category: '其他', expiryDate: '2026-09-20' })
+
+    expect(repository.updateItem).toHaveBeenCalledWith('3', {
+      name: '全脂牛奶',
+      category_code: '其他',
+      expiry_date: '2026-09-20',
+    })
+  })
+
+  it('updateFood normalizes an empty expiryDate to null', async () => {
+    repository.updateItem.mockResolvedValue({
+      id: '3',
+      name: '牛奶',
+      category_code: '乳製品',
+      quantity: 1,
+      expiry_date: null,
+      added_at: '2026-09-01T00:00:00Z',
+    })
+
+    await updateFood('3', { expiryDate: '' })
+
+    expect(repository.updateItem).toHaveBeenCalledWith('3', { expiry_date: null })
   })
 
   it('deleteFood delegates to the repository', async () => {

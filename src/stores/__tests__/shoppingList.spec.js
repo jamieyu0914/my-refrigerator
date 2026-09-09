@@ -95,6 +95,35 @@ describe('shoppingList store', () => {
     })
   })
 
+  it('togglePurchased and updateItem are no-ops for an unknown id', async () => {
+    const store = useShoppingListStore()
+    store.items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+
+    await store.togglePurchased('missing')
+    await store.updateItem('missing', { name: 'x' })
+
+    expect(shoppingListService.updateShoppingItem).not.toHaveBeenCalled()
+    expect(store.items).toEqual([
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ])
+  })
+
+  it('deleteItem is a no-op for an unknown id', async () => {
+    const store = useShoppingListStore()
+    store.items = [
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ]
+    shoppingListService.deleteShoppingItem.mockResolvedValue(undefined)
+
+    await store.deleteItem('missing')
+
+    expect(store.items).toEqual([
+      { id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false },
+    ])
+  })
+
   it('deleteItem removes the matching item', async () => {
     const store = useShoppingListStore()
     store.items = [{ id: '1', name: '牛奶', quantity: 1, unit: '瓶', category: '乳製品', purchased: false }]

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, shallowMount } from '@vue/test-utils'
 import Refrigerator from '../Refrigerator.vue'
 import FoodList from '../../components/FoodList.vue'
+import CategoryFilter from '../../components/CategoryFilter.vue'
 import { useFoodStore } from '../../stores/food'
 
 vi.mock('../../stores/food', () => ({
@@ -93,5 +94,48 @@ describe('Refrigerator.vue', () => {
     await flushPromises()
 
     expect(wrapper.findComponent(FoodList).props('deletingIds')).toEqual([])
+  })
+
+  it('filters the visible foods by the selected category', async () => {
+    const foods = [
+      { id: '1', name: '牛奶', category: '乳製品', quantity: 1, expiryDate: null },
+      { id: '2', name: '蘋果', category: '蔬果', quantity: 3, expiryDate: null },
+    ]
+    const wrapper = mountWithStore({ foods })
+    await flushPromises()
+
+    await wrapper.findComponent(CategoryFilter).vm.$emit('update:modelValue', '蔬果')
+
+    expect(wrapper.findComponent(FoodList).props('foods')).toEqual([foods[1]])
+  })
+
+  it('shows an error message when deleting fails', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    const deleteFood = vi.fn().mockRejectedValue(new Error('fail'))
+    const wrapper = mountWithStore({
+      foods: [{ id: '1', name: '牛奶', category: '乳製品', quantity: 1, expiryDate: null }],
+      deleteFood,
+    })
+    await flushPromises()
+
+    wrapper.findComponent(FoodList).vm.$emit('delete', '1')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('刪除失敗')
+  })
+
+  it('does not delete when the confirmation is dismissed', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => false))
+    const deleteFood = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mountWithStore({
+      foods: [{ id: '1', name: '牛奶', category: '乳製品', quantity: 1, expiryDate: null }],
+      deleteFood,
+    })
+    await flushPromises()
+
+    wrapper.findComponent(FoodList).vm.$emit('delete', '1')
+    await flushPromises()
+
+    expect(deleteFood).not.toHaveBeenCalled()
   })
 })

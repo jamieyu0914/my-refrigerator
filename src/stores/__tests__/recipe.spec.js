@@ -77,6 +77,30 @@ describe('recipe store', () => {
     expect(updated).toEqual({ id: '1', title: '番茄炒蛋', isFavorite: true })
   })
 
+  it('fetchRecipe delegates to the service', async () => {
+    recipeService.fetchRecipeById.mockResolvedValue({ id: '1', title: '番茄炒蛋' })
+
+    const store = useRecipeStore()
+    const recipe = await store.fetchRecipe('1')
+
+    expect(recipeService.fetchRecipeById).toHaveBeenCalledWith('1')
+    expect(recipe).toEqual({ id: '1', title: '番茄炒蛋' })
+  })
+
+  it('leaves the list untouched when updateRecipe/deleteRecipe/toggleFavorite target an unknown id', async () => {
+    const store = useRecipeStore()
+    store.recipes = [{ id: '1', title: '番茄炒蛋' }]
+    recipeService.updateRecipe.mockResolvedValue({ id: 'missing', title: 'x' })
+    recipeService.deleteRecipe.mockResolvedValue(undefined)
+    recipeService.toggleFavorite.mockResolvedValue({ id: 'missing', title: 'x' })
+
+    await store.updateRecipe('missing', { title: 'x' })
+    await store.deleteRecipe('missing')
+    await store.toggleFavorite('missing', false)
+
+    expect(store.recipes).toEqual([{ id: '1', title: '番茄炒蛋' }])
+  })
+
   it('propagates a rejected service call instead of swallowing it', async () => {
     recipeService.fetchRecipes.mockRejectedValue(new Error('network error'))
 

@@ -144,6 +144,23 @@ describe('shoppingListService', () => {
     })
   })
 
+  it('updateShoppingItem normalizes an empty unit to null', async () => {
+    repository.updateItem.mockResolvedValue({
+      id: '3',
+      name: '牛奶',
+      quantity: 1,
+      unit: null,
+      category_code: '乳製品',
+      purchased: false,
+      created_at: '2026-09-01T00:00:00Z',
+      updated_at: '2026-09-03T00:00:00Z',
+    })
+
+    await updateShoppingItem('3', { unit: '' })
+
+    expect(repository.updateItem).toHaveBeenCalledWith('3', { unit: null })
+  })
+
   it('deleteShoppingItem delegates to the repository', async () => {
     repository.deleteItem.mockResolvedValue(undefined)
 
