@@ -26,6 +26,7 @@ src/
 │   └── index.js
 ├── stores/           # Pinia stores for state shared across pages (auth, food, shoppingList, ...)
 ├── services/         # Data-access layer (localStorage today, Supabase/API calls once wired up)
+├── repositories/     # Raw Supabase table CRUD for domains that have one (see database skill) — services call these, never Supabase directly
 ├── types/            # JSDoc @typedef definitions for shared data shapes (Food, Recipe, ShoppingItem, User, ...)
 ├── utils/            # Small stateless helpers (formatting, derived-status calculations, constants)
 ├── App.vue           # Picks a layout from route.meta.layout and renders <router-view>
