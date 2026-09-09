@@ -20,6 +20,90 @@ src/
 .env.example                     # VITE_SUPABASE_URL／VITE_SUPABASE_ANON_KEY 佔位範本，實際值放 .env（已 gitignore）
 ```
 
+## 資料庫架構圖
+
+### ER 圖（資料表關聯）
+
+```mermaid
+erDiagram
+    AUTH_USERS ||--|| PROFILES : "id = id"
+    AUTH_USERS ||--o{ FOODS : "id = user_id"
+    AUTH_USERS ||--o{ SHOPPING_ITEMS : "id = user_id"
+    AUTH_USERS ||--o{ RECIPES : "id = user_id"
+    AUTH_USERS ||--o{ PROMOTIONS : "id = user_id"
+    CATEGORIES ||--o{ FOODS : "code = category_code"
+    CATEGORIES ||--o{ PROMOTIONS : "code = category_code"
+
+    AUTH_USERS {
+        uuid id PK "Supabase Auth 管理"
+    }
+    PROFILES {
+        uuid id PK "同時是 auth.users 的 FK"
+        text name
+        timestamptz created_at
+    }
+    CATEGORIES {
+        text code PK "蔬果／肉類／乳製品／飲品／其他"
+        text label
+        int sort_order
+    }
+    FOODS {
+        uuid id PK
+        uuid user_id FK
+        text name
+        text category_code FK
+        int quantity
+        date expiry_date
+        timestamptz added_at
+    }
+    SHOPPING_ITEMS {
+        uuid id PK
+        uuid user_id FK
+        text name
+        int quantity
+        boolean checked
+        timestamptz added_at
+    }
+    RECIPES {
+        uuid id PK
+        uuid user_id FK
+        text title
+        jsonb ingredients
+        text instructions
+        text image_url
+        text_array tags
+        boolean is_favorite
+        timestamptz created_at
+    }
+    PROMOTIONS {
+        uuid id PK
+        uuid user_id FK
+        text name
+        text category_code FK
+        numeric original_price
+        numeric discount_price
+        text store
+        date valid_from
+        date valid_until
+        text image_url
+        timestamptz created_at
+    }
+```
+
+- 除 `categories` 外，每張表都有 `user_id` 指向 `auth.users` 並開 RLS，政策限制 `auth.uid() = user_id`（`profiles` 則是 `auth.uid() = id`）
+- `foods`／`promotions` 各自的 `category_code` 都是外鍵指到共用的 `categories.code`
+- `recipes` 沒有跨使用者共用機制，`is_favorite` 是欄位而非關聯表
+
+### 資料存取分層（元件永遠不直接呼叫 Supabase）
+
+```mermaid
+flowchart LR
+    V["Views / Components\n(Refrigerator.vue、ShoppingList.vue…)"] --> S["Pinia stores\n(stores/food.js、stores/shoppingList.js、stores/auth.js)"]
+    S --> SV["src/services/*.js\n(foodService、shoppingListService、authService)"]
+    SV --> C["supabaseClient.js\n(唯一 createClient 實例 + getCurrentUserId())"]
+    C --> DB[("Supabase\nPostgres + Auth + RLS")]
+```
+
 ## 重點功能
 
 - **Schema**：`supabase/migrations/20260905000000_init_schema.sql` 定義六張表——`categories`（分類查表，`foods`／`promotions` 共用同一套分類）、`profiles`（1:1 對應 `auth.users`，靠 `handle_new_user` trigger 在使用者註冊時自動建立）、`foods`（我的冰箱）、`shopping_items`（採買清單）、`recipes`（私有食譜，用 `is_favorite` 布林欄位取代多對多的最愛表）、`promotions`（私有的特價食材記錄，`category_code` 對齊 `foods` 的分類）。除 `categories` 外，每張表都有 `user_id` 並啟用 RLS，政策一律限制 `auth.uid() = user_id`
