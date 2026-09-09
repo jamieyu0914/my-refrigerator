@@ -10,6 +10,8 @@ const foodStore = useFoodStore()
 
 const editingId = computed(() => route.params.id || null)
 const isLoading = ref(!!editingId.value)
+const isSubmitting = ref(false)
+const errorMessage = ref('')
 
 const form = reactive({
   name: '',
@@ -21,12 +23,17 @@ const form = reactive({
 onMounted(async () => {
   if (!editingId.value) return
 
-  const existing = await foodStore.fetchFood(editingId.value)
-  form.name = existing.name
-  form.category = existing.category
-  form.quantity = existing.quantity
-  form.expiryDate = existing.expiryDate || ''
-  isLoading.value = false
+  try {
+    const existing = await foodStore.fetchFood(editingId.value)
+    form.name = existing.name
+    form.category = existing.category
+    form.quantity = existing.quantity
+    form.expiryDate = existing.expiryDate || ''
+  } catch {
+    errorMessage.value = '載入物品資料失敗，請稍後再試。'
+  } finally {
+    isLoading.value = false
+  }
 })
 
 async function handleSubmit() {
@@ -39,25 +46,43 @@ async function handleSubmit() {
     expiryDate: form.expiryDate || null,
   }
 
-  if (editingId.value) {
-    await foodStore.updateFood(editingId.value, payload)
-  } else {
-    await foodStore.addFood(payload)
+  errorMessage.value = ''
+  isSubmitting.value = true
+  try {
+    if (editingId.value) {
+      await foodStore.updateFood(editingId.value, payload)
+    } else {
+      await foodStore.addFood(payload)
+    }
+    router.push({ name: 'refrigerator' })
+  } catch {
+    errorMessage.value = '儲存失敗，請稍後再試。'
+  } finally {
+    isSubmitting.value = false
   }
-
-  router.push({ name: 'refrigerator' })
 }
 
 async function handleDelete() {
   if (!editingId.value) return
-  await foodStore.deleteFood(editingId.value)
-  router.push({ name: 'refrigerator' })
+  if (!confirm('確定要刪除這項食材嗎？')) return
+
+  errorMessage.value = ''
+  isSubmitting.value = true
+  try {
+    await foodStore.deleteFood(editingId.value)
+    router.push({ name: 'refrigerator' })
+  } catch {
+    errorMessage.value = '刪除失敗，請稍後再試。'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <template>
   <main class="food-form-page">
     <h1>{{ editingId ? '編輯物品' : '新增物品' }}</h1>
+    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <p v-if="isLoading" class="loading">載入中…</p>
     <form v-else class="food-form" @submit.prevent="handleSubmit">
       <label class="field">
@@ -85,8 +110,18 @@ async function handleDelete() {
       </label>
 
       <div class="actions">
-        <button type="submit" class="submit">{{ editingId ? '儲存' : '新增' }}</button>
-        <button v-if="editingId" type="button" class="delete" @click="handleDelete">刪除</button>
+        <button type="submit" class="submit" :disabled="isSubmitting">
+          {{ isSubmitting ? '儲存中…' : editingId ? '儲存' : '新增' }}
+        </button>
+        <button
+          v-if="editingId"
+          type="button"
+          class="delete"
+          :disabled="isSubmitting"
+          @click="handleDelete"
+        >
+          刪除
+        </button>
         <RouterLink :to="{ name: 'refrigerator' }" class="cancel">取消</RouterLink>
       </div>
     </form>
@@ -100,6 +135,10 @@ async function handleDelete() {
 
 .loading {
   color: var(--text);
+}
+
+.error {
+  color: #c53232;
 }
 
 .food-form {
@@ -141,6 +180,11 @@ async function handleDelete() {
   background: var(--accent);
   color: #fff;
   font-size: 16px;
+}
+
+.submit:disabled,
+.delete:disabled {
+  opacity: 0.6;
 }
 
 .delete {

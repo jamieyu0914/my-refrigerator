@@ -1,42 +1,31 @@
-import { supabase } from './supabaseClient'
-
-async function fetchProfile(userId) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('name')
-    .eq('id', userId)
-    .single()
-
-  if (error) throw error
-  return { name: data.name }
-}
+import {
+  fetchProfileById,
+  fetchSession,
+  signInWithPassword,
+  signOutSession,
+  subscribeToAuthChanges,
+} from '../repositories/authRepository'
 
 async function toUser(session) {
   if (!session) return null
-  const profile = await fetchProfile(session.user.id)
-  return { id: session.user.id, email: session.user.email, ...profile }
+  const profile = await fetchProfileById(session.user.id)
+  return { id: session.user.id, email: session.user.email, name: profile.name }
 }
 
 export async function getSession() {
-  const { data, error } = await supabase.auth.getSession()
-  if (error) throw error
-  return toUser(data.session)
+  const session = await fetchSession()
+  return toUser(session)
 }
 
 export async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) throw error
-  return toUser(data.session)
+  const session = await signInWithPassword(email, password)
+  return toUser(session)
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
+  await signOutSession()
 }
 
 export function onAuthStateChange(callback) {
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    callback(session)
-  })
-  return data.subscription
+  return subscribeToAuthChanges(callback)
 }

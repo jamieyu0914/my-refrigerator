@@ -1,6 +1,6 @@
 ---
 name: database
-description: Supabase (Postgres) database conventions for this project — schema design, naming, Row Level Security, and how the src/services/ data-access layer should talk to Supabase. Use whenever creating or modifying database schema/migrations, Supabase queries, or the services/ layer.
+description: Supabase (Postgres) database conventions for this project — schema design, naming, Row Level Security, and how the src/repositories/ + src/services/ data-access layers should talk to Supabase. Use whenever creating or modifying database schema/migrations, Supabase queries, or the repositories/services layers.
 ---
 
 # Database Development Guide
@@ -32,15 +32,17 @@ promotions        # id, user_id, name, category_code (FK -> categories), origina
 - **Ownership + RLS**: every per-user table (`foods`, `shopping_items`, `recipes`, `promotions`, `profiles`) has `user_id`/`id` tied to `auth.users` with RLS restricting all operations to `auth.uid()`. `recipes` is private per user — there is no cross-user sharing/favoriting table; "favorite" is just `recipes.is_favorite`. `categories` is the one shared/reference table: readable by all authenticated users, writable only by service role.
 - **Timestamps**: use `timestamptz`, default `now()`, for any `added_at`/`created_at` column.
 
-## `services/` layer conventions
+## `repositories/` + `services/` layer conventions
 
-This is what makes the Supabase migration safe: **components and stores never talk to Supabase directly** — only `src/services/*.js` does.
+This is what makes the Supabase migration safe: **components and stores never talk to Supabase directly** — only `src/repositories/*.js` does, and only `src/services/*.js` may call a repository.
 
-- One shared client: `src/services/supabaseClient.js` exports a single instance from `createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)`.
-- Each domain service (`foodService.js`, `shoppingListService.js`, `recipeService.js`, `authService.js`) is the *only* module that imports `supabaseClient.js` for that table.
-- Service functions return plain camelCase JS objects shaped like `src/types/*.js` — map snake_case rows to camelCase inside the service before returning, and back to snake_case before writing.
-- On a Supabase error, `throw error` (or `throw new Error(error.message)`) rather than swallowing it or logging inside the service — let the calling Pinia store/component decide how to surface it to the user.
-- Keep function names/signatures stable across the localStorage → Supabase swap (e.g. `loadFoods()` / `saveFoods()` stay named the same even once they call Supabase instead of `localStorage`), so migrating a store is a `services/`-only change — see `.claude/skills/frontend/SKILL.md` for how stores depend on services.
+- One shared client: `src/services/supabaseClient.js` exports a single instance from `createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)`, plus the cross-cutting `getCurrentUserId()` session helper.
+- `src/repositories/<domain>Repository.js` (e.g. `refrigeratorRepository.js` for the `foods` table) owns every `supabase.from('<table>')...` call for that table, exposing plain CRUD verbs (`getItems()`, `getItemById(id)`, `createItem(row)`, `updateItem(id, payload)`, `deleteItem(id)`). Repository functions are dumb CRUD: they take/return **raw snake_case rows** matching the table columns 1:1, with zero camelCase mapping and zero domain logic. `if (error) throw error` — never swallow or log. A repository's file/export names describe the feature (`refrigerator`), independent of what the underlying table/type/store happen to be named (`foods`/`Food`/`stores/food.js`).
+- `src/services/<domain>Service.js` is the only caller of that repository. It resolves `getCurrentUserId()` when a write needs it, maps snake_case rows to camelCase JS objects shaped like `src/types/*.js` (and back before writing) via a `toX()` mapper, and calls the repository. Services import repository functions, not `supabaseClient.js`, for table access.
+- Services still `throw` (not swallow) whatever the repository throws — error handling stays the calling Pinia store/component's job, per `.claude/skills/backend/SKILL.md`.
+- Keep function names/signatures stable up each layer (a store calling `fetchFoods()` shouldn't need to change when the service starts delegating to a repository underneath it) — see `.claude/skills/backend/SKILL.md` for the full store↔service↔repository contract.
+- Every domain currently has a repository (`refrigeratorRepository.js`, `shoppingListRepository.js`, `authRepository.js`) — new domains should get one from the start rather than having their service call `supabase`/`supabase.auth` directly.
+- The `auth` domain shows the pattern for non-table concerns too: `authRepository.js` wraps the raw `supabase.auth.*` calls (`fetchSession`, `signInWithPassword`, `signOutSession`, `subscribeToAuthChanges`) plus the one `profiles` row read (`fetchProfileById`) it needs; `authService.js` composes those into `toUser()` and keeps its own exported names (`getSession`, `signIn`, `signOut`, `onAuthStateChange`) stable for `stores/auth.js`.
 
 ## Auth integration
 

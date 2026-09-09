@@ -40,7 +40,7 @@ defineEmits(['update:modelValue'])
 }
 
 .chip {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--border);
   border-radius: 999px;

@@ -1,0 +1,265 @@
+├─ @babel/helper-string-parser@7.29.7
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/babel/babel
+│  ├─ publisher: The Babel Team
+│  ├─ url: https://babel.dev/team
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/helper-string-parser
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/helper-string-parser/LICENSE
+├─ @babel/helper-validator-identifier@7.29.7
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/babel/babel
+│  ├─ publisher: The Babel Team
+│  ├─ url: https://babel.dev/team
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/helper-validator-identifier
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/helper-validator-identifier/LICENSE
+├─ @babel/parser@7.29.8
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/babel/babel
+│  ├─ publisher: The Babel Team
+│  ├─ url: https://babel.dev/team
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/parser
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/parser/LICENSE
+├─ @babel/types@7.29.8
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/babel/babel
+│  ├─ publisher: The Babel Team
+│  ├─ url: https://babel.dev/team
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/types
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@babel/types/LICENSE
+├─ @jridgewell/sourcemap-codec@1.6.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/jridgewell/sourcemaps
+│  ├─ publisher: Justin Ridgewell
+│  ├─ email: justin@ridgewell.name
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@jridgewell/sourcemap-codec
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@jridgewell/sourcemap-codec/LICENSE
+├─ @supabase/auth-js@2.115.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/supabase-js
+│  ├─ publisher: Supabase
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/auth-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/auth-js/LICENSE
+├─ @supabase/functions-js@2.115.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/supabase-js
+│  ├─ publisher: Supabase
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/functions-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/functions-js/LICENSE
+├─ @supabase/phoenix@0.4.5
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/phoenix
+│  ├─ publisher: Chris McCord
+│  ├─ email: chris@chrismccord.com
+│  ├─ url: https://www.phoenixframework.org
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/phoenix
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/phoenix/LICENSE.md
+├─ @supabase/postgrest-js@2.115.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/supabase-js
+│  ├─ publisher: Supabase
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/postgrest-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/postgrest-js/LICENSE
+├─ @supabase/realtime-js@2.115.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/supabase-js
+│  ├─ publisher: Supabase
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/realtime-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/realtime-js/LICENSE
+├─ @supabase/storage-js@2.115.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/supabase-js
+│  ├─ publisher: Supabase
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/storage-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/storage-js/LICENSE
+├─ @supabase/supabase-js@2.115.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/supabase-js
+│  ├─ publisher: Supabase
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/supabase-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@supabase/supabase-js/LICENSE
+├─ @vue/compiler-core@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-core
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-core/LICENSE
+├─ @vue/compiler-dom@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-dom
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-dom/LICENSE
+├─ @vue/compiler-sfc@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-sfc
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-sfc/LICENSE
+├─ @vue/compiler-ssr@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-ssr
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/compiler-ssr/LICENSE
+├─ @vue/devtools-api@6.6.4
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/vue-devtools
+│  ├─ publisher: Guillaume Chau
+│  └─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/vue-router/node_modules/@vue/devtools-api
+├─ @vue/devtools-api@8.2.1
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/devtools
+│  ├─ publisher: webfansplz
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/devtools-api
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/devtools-api/LICENSE
+├─ @vue/devtools-kit@8.2.1
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/devtools
+│  ├─ publisher: webfansplz
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/devtools-kit
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/devtools-kit/LICENSE
+├─ @vue/devtools-shared@8.2.1
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/devtools
+│  ├─ publisher: webfansplz
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/devtools-shared
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/devtools-shared/LICENSE
+├─ @vue/reactivity@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/reactivity
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/reactivity/LICENSE
+├─ @vue/runtime-core@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/runtime-core
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/runtime-core/LICENSE
+├─ @vue/runtime-dom@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/runtime-dom
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/runtime-dom/LICENSE
+├─ @vue/server-renderer@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/server-renderer
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/server-renderer/LICENSE
+├─ @vue/shared@3.5.42
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/core
+│  ├─ publisher: Evan You
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/shared
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/@vue/shared/LICENSE
+├─ birpc@2.9.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/antfu-collective/birpc
+│  ├─ publisher: Anthony Fu
+│  ├─ email: anthonyfu117@hotmail.com
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/birpc
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/birpc/LICENSE
+├─ csstype@3.2.3
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/frenic/csstype
+│  ├─ publisher: Fredrik Nicol
+│  ├─ email: fredrik.nicol@gmail.com
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/csstype
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/csstype/LICENSE
+├─ entities@7.0.1
+│  ├─ licenses: BSD-2-Clause
+│  ├─ repository: https://github.com/fb55/entities
+│  ├─ publisher: Felix Boehm
+│  ├─ email: me@feedic.com
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/entities
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/entities/LICENSE
+├─ estree-walker@2.0.2
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/Rich-Harris/estree-walker
+│  ├─ publisher: Rich Harris
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/estree-walker
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/estree-walker/LICENSE
+├─ hookable@5.5.3
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/unjs/hookable
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/hookable
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/hookable/LICENSE.md
+├─ iceberg-js@0.8.1
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/supabase/iceberg-js
+│  ├─ publisher: mandarini
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/iceberg-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/iceberg-js/LICENSE
+├─ magic-string@0.30.21
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/Rich-Harris/magic-string
+│  ├─ publisher: Rich Harris
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/magic-string
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/magic-string/LICENSE
+├─ nanoid@3.3.18
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/ai/nanoid
+│  ├─ publisher: Andrey Sitnik
+│  ├─ email: andrey@sitnik.ru
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/nanoid
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/nanoid/LICENSE
+├─ nostics@1.2.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vercel-labs/nostics
+│  ├─ publisher: Anthony Fu
+│  ├─ email: anthonyfu117@hotmail.com
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/nostics
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/nostics/LICENSE
+├─ perfect-debounce@2.1.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/unjs/perfect-debounce
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/perfect-debounce
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/perfect-debounce/LICENSE
+├─ picocolors@1.1.1
+│  ├─ licenses: ISC
+│  ├─ repository: https://github.com/alexeyraspopov/picocolors
+│  ├─ publisher: Alexey Raspopov
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/picocolors
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/picocolors/LICENSE
+├─ pinia@4.0.3
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/pinia
+│  ├─ publisher: Eduardo San Martin Morote
+│  ├─ email: posva13@gmail.com
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/pinia
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/pinia/LICENSE
+├─ postcss@8.5.26
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/postcss/postcss
+│  ├─ publisher: Andrey Sitnik
+│  ├─ email: andrey@sitnik.es
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/postcss
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/postcss/LICENSE
+├─ source-map-js@1.2.1
+│  ├─ licenses: BSD-3-Clause
+│  ├─ repository: https://github.com/7rulnik/source-map-js
+│  ├─ publisher: Valentin 7rulnik Semirulnik
+│  ├─ email: v7rulnik@gmail.com
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/source-map-js
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/source-map-js/LICENSE
+├─ tslib@2.8.1
+│  ├─ licenses: 0BSD
+│  ├─ repository: https://github.com/Microsoft/tslib
+│  ├─ publisher: Microsoft Corp.
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/tslib
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/tslib/LICENSE.txt
+├─ vue-router@4.6.4
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/vuejs/router
+│  ├─ publisher: Eduardo San Martin Morote
+│  ├─ email: posva13@gmail.com
+│  ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/vue-router
+│  └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/vue-router/LICENSE
+└─ vue@3.5.42
+   ├─ licenses: MIT
+   ├─ repository: https://github.com/vuejs/core
+   ├─ publisher: Evan You
+   ├─ path: /Users/jamieyu/Documents/my-refrigerator/node_modules/vue
+   └─ licenseFile: /Users/jamieyu/Documents/my-refrigerator/node_modules/vue/LICENSE

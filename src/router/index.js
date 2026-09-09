@@ -4,6 +4,8 @@ import Home from '../views/Home.vue'
 import Refrigerator from '../views/Refrigerator.vue'
 import ShoppingList from '../views/ShoppingList.vue'
 import Recipes from '../views/Recipes.vue'
+import RecipeDetail from '../views/RecipeDetail.vue'
+import RecipeForm from '../views/RecipeForm.vue'
 import Favorites from '../views/Favorites.vue'
 import Promotions from '../views/Promotions.vue'
 import Login from '../views/Login.vue'
@@ -26,6 +28,24 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     { path: '/recipes', name: 'recipes', component: Recipes, meta: { requiresAuth: true } },
+    {
+      path: '/recipes/new',
+      name: 'recipe-new',
+      component: RecipeForm,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/recipes/:id',
+      name: 'recipe-detail',
+      component: RecipeDetail,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/recipes/:id/edit',
+      name: 'recipe-edit',
+      component: RecipeForm,
+      meta: { requiresAuth: true },
+    },
     { path: '/favorites', name: 'favorites', component: Favorites, meta: { requiresAuth: true } },
     {
       path: '/promotions',

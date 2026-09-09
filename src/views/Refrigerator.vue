@@ -9,10 +9,17 @@ const foodStore = useFoodStore()
 
 const selectedCategory = ref('')
 const isLoading = ref(true)
+const errorMessage = ref('')
+const deletingIds = ref([])
 
 onMounted(async () => {
-  await foodStore.loadFoods()
-  isLoading.value = false
+  try {
+    await foodStore.loadFoods()
+  } catch {
+    errorMessage.value = '載入冰箱資料失敗，請稍後再試。'
+  } finally {
+    isLoading.value = false
+  }
 })
 
 const visibleFoods = computed(() =>
@@ -21,8 +28,19 @@ const visibleFoods = computed(() =>
     : foodStore.foods,
 )
 
-function handleDelete(id) {
-  foodStore.deleteFood(id)
+async function handleDelete(id) {
+  if (deletingIds.value.includes(id)) return
+  if (!confirm('確定要刪除這項食材嗎？')) return
+
+  errorMessage.value = ''
+  deletingIds.value.push(id)
+  try {
+    await foodStore.deleteFood(id)
+  } catch {
+    errorMessage.value = '刪除失敗，請稍後再試。'
+  } finally {
+    deletingIds.value = deletingIds.value.filter((deletingId) => deletingId !== id)
+  }
 }
 </script>
 
@@ -30,8 +48,14 @@ function handleDelete(id) {
   <main class="refrigerator">
     <h1>我的冰箱</h1>
     <CategoryFilter v-model="selectedCategory" :categories="CATEGORIES" />
+    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <p v-if="isLoading" class="loading">載入中…</p>
-    <FoodList v-else :foods="visibleFoods" @delete="handleDelete" />
+    <FoodList
+      v-else
+      :foods="visibleFoods"
+      :deleting-ids="deletingIds"
+      @delete="handleDelete"
+    />
     <RouterLink :to="{ name: 'food-new' }" class="fab" aria-label="新增物品">+</RouterLink>
   </main>
 </template>
@@ -48,6 +72,10 @@ function handleDelete(id) {
 
 .loading {
   color: var(--text);
+}
+
+.error {
+  color: #c53232;
 }
 
 .fab {

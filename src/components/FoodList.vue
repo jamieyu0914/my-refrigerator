@@ -3,6 +3,7 @@ import FoodCard from './FoodCard.vue'
 
 defineProps({
   foods: { type: Array, required: true },
+  deletingIds: { type: Array, default: () => [] },
 })
 
 defineEmits(['delete'])
@@ -15,6 +16,7 @@ defineEmits(['delete'])
       v-for="food in foods"
       :key="food.id"
       :food="food"
+      :deleting="deletingIds.includes(food.id)"
       @delete="$emit('delete', $event)"
     />
   </div>

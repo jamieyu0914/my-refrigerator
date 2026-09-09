@@ -19,10 +19,17 @@ export const useShoppingListStore = defineStore('shoppingList', () => {
     items.value.push(item)
   }
 
-  async function toggleChecked(id) {
+  async function togglePurchased(id) {
     const item = items.value.find((i) => i.id === id)
     if (!item) return
-    const updated = await updateShoppingItem(id, { checked: !item.checked })
+    const updated = await updateShoppingItem(id, { purchased: !item.purchased })
+    Object.assign(item, updated)
+  }
+
+  async function updateItem(id, updates) {
+    const item = items.value.find((i) => i.id === id)
+    if (!item) return
+    const updated = await updateShoppingItem(id, updates)
     Object.assign(item, updated)
   }
 
@@ -32,5 +39,5 @@ export const useShoppingListStore = defineStore('shoppingList', () => {
     if (index !== -1) items.value.splice(index, 1)
   }
 
-  return { items, loadItems, addItem, toggleChecked, deleteItem }
+  return { items, loadItems, addItem, togglePurchased, updateItem, deleteItem }
 })

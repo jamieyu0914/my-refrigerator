@@ -1,4 +1,11 @@
-import { getCurrentUserId, supabase } from './supabaseClient'
+import { getCurrentUserId } from './supabaseClient'
+import {
+  createItem,
+  deleteItem,
+  getItemById,
+  getItems,
+  updateItem,
+} from '../repositories/refrigeratorRepository'
 
 function toFood(row) {
   return {
@@ -12,38 +19,27 @@ function toFood(row) {
 }
 
 export async function fetchFoods() {
-  const { data, error } = await supabase
-    .from('foods')
-    .select('*')
-    .order('expiry_date', { ascending: true })
-
-  if (error) throw error
-  return data.map(toFood)
+  const rows = await getItems()
+  return rows.map(toFood)
 }
 
 export async function fetchFoodById(id) {
-  const { data, error } = await supabase.from('foods').select('*').eq('id', id).single()
-  if (error) throw error
-  return toFood(data)
+  const row = await getItemById(id)
+  return toFood(row)
 }
 
 export async function insertFood({ name, category, quantity, expiryDate }) {
   const userId = await getCurrentUserId()
 
-  const { data, error } = await supabase
-    .from('foods')
-    .insert({
-      user_id: userId,
-      name,
-      category_code: category,
-      quantity,
-      expiry_date: expiryDate || null,
-    })
-    .select()
-    .single()
+  const row = await createItem({
+    user_id: userId,
+    name,
+    category_code: category,
+    quantity,
+    expiry_date: expiryDate || null,
+  })
 
-  if (error) throw error
-  return toFood(data)
+  return toFood(row)
 }
 
 export async function updateFood(id, updates) {
@@ -53,18 +49,10 @@ export async function updateFood(id, updates) {
   if ('quantity' in updates) payload.quantity = updates.quantity
   if ('expiryDate' in updates) payload.expiry_date = updates.expiryDate || null
 
-  const { data, error } = await supabase
-    .from('foods')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return toFood(data)
+  const row = await updateItem(id, payload)
+  return toFood(row)
 }
 
 export async function deleteFood(id) {
-  const { error } = await supabase.from('foods').delete().eq('id', id)
-  if (error) throw error
+  await deleteItem(id)
 }

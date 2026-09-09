@@ -3,8 +3,11 @@
  * @property {string} id
  * @property {string} name
  * @property {number} quantity
- * @property {boolean} checked
- * @property {string} addedAt
+ * @property {string|null} unit
+ * @property {string} category
+ * @property {boolean} purchased
+ * @property {string} createdAt
+ * @property {string} updatedAt
  */
 
 export {}
