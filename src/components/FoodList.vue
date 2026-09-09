@@ -1,27 +1,27 @@
 <script setup>
-import ItemCard from './ItemCard.vue'
+import FoodCard from './FoodCard.vue'
 
 defineProps({
-  items: { type: Array, required: true },
+  foods: { type: Array, required: true },
 })
 
 defineEmits(['delete'])
 </script>
 
 <template>
-  <div class="item-list">
-    <p v-if="items.length === 0" class="empty">冰箱空空的，點右下角「+」新增物品吧！</p>
-    <ItemCard
-      v-for="item in items"
-      :key="item.id"
-      :item="item"
+  <div class="food-list">
+    <p v-if="foods.length === 0" class="empty">冰箱空空的，點右下角「+」新增物品吧！</p>
+    <FoodCard
+      v-for="food in foods"
+      :key="food.id"
+      :food="food"
       @delete="$emit('delete', $event)"
     />
   </div>
 </template>
 
 <style scoped>
-.item-list {
+.food-list {
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -12,21 +12,32 @@ Conventions for building the frontend of this project. Follow these whenever cre
 - **Framework**: Vue 3 (Composition API preferred)
 - **Language**: JavaScript (no TypeScript)
 - **Routing**: Vue Router 4
+- **State management**: Pinia (setup stores in `/stores`)
 
 ## Project Structure
 
 ```
 src/
-├── components/       # Reusable Vue components
+├── assets/           # Bundled static assets (images, icons) imported by components
+├── components/       # Reusable, presentational Vue components
+├── layouts/          # Layout shells (e.g. DefaultLayout with NavBar, AuthLayout without)
+├── views/            # Page-level components (route targets)
 ├── router/           # Route definitions
 │   └── index.js
-├── views/            # Page-level components (route targets)
-├── App.vue
+├── stores/           # Pinia stores for state shared across pages (auth, food, shoppingList, ...)
+├── services/         # Data-access layer (localStorage today, Supabase/API calls once wired up)
+├── types/            # JSDoc @typedef definitions for shared data shapes (Food, Recipe, ShoppingItem, User, ...)
+├── utils/            # Small stateless helpers (formatting, derived-status calculations, constants)
+├── App.vue           # Picks a layout from route.meta.layout and renders <router-view>
 └── main.js
 ```
 
 - Put reusable, presentational pieces in `/components`.
 - Put route-level page components in `/views` and reference them from `/router`.
+- `/stores` holds Pinia stores for any state that needs to be shared across pages/components — current user, fridge food, shopping list, etc. Components should read/mutate state through a store, not by talking to `localStorage`/an API directly.
+- `/services` is the only layer allowed to touch persistence/IO (currently `localStorage`; later Supabase or another API). Stores call into a same-named service (e.g. `stores/food.js` calls `services/foodService.js`) so components never do data access directly — this is what keeps the future Supabase migration contained to `/services` instead of touching every component.
+- `/types` holds one JSDoc `@typedef` file per domain entity (e.g. `types/food.js`, `types/recipe.js`, `types/shoppingItem.js`, `types/user.js`) describing the shape stores/services work with — no runtime code, just documentation for editor intellisense (project is JS-only, no TypeScript).
+- Set `meta: { layout: 'auth' }` on routes that shouldn't show the default chrome (e.g. `/login`); omit it to fall back to `DefaultLayout`.
 
 ## Router Setup
 
@@ -53,7 +64,7 @@ Register it in `main.js` via `app.use(router)`.
 
 ## Authentication (Login / Logout)
 
-- Keep auth state in a small store (e.g. Pinia, or a simple reactive composable if no store library is added) — expose `isLoggedIn`, `login()`, `logout()`, and current user info.
+- Keep auth state in `stores/auth.js` (Pinia) — expose `isLoggedIn`, `login()`, `logout()`, and current user (`types/user.js`); delegate persistence to `services/authService.js`.
 - Persist the session token (e.g. `localStorage`) so a page refresh keeps the user logged in; clear it on logout.
 - Use a global `router.beforeEach` navigation guard to redirect unauthenticated users away from routes with `meta: { requiresAuth: true }`, and redirect logged-in users away from `/login`.
 - Provide a visible login/logout entry point in the main nav/header component under `/components` (e.g. `NavBar.vue`) that toggles based on auth state.

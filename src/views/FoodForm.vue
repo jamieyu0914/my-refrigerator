@@ -1,23 +1,35 @@
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CATEGORIES, useItems } from '../composables/useItems'
+import { useFoodStore } from '../stores/food'
+import { CATEGORIES } from '../utils/constants'
 
 const route = useRoute()
 const router = useRouter()
-const { getItem, addItem, updateItem, deleteItem } = useItems()
+const foodStore = useFoodStore()
 
 const editingId = computed(() => route.params.id || null)
-const existing = editingId.value ? getItem(editingId.value) : null
+const isLoading = ref(!!editingId.value)
 
 const form = reactive({
-  name: existing?.name || '',
-  category: existing?.category || CATEGORIES[0],
-  quantity: existing?.quantity ?? 1,
-  expiryDate: existing?.expiryDate || '',
+  name: '',
+  category: CATEGORIES[0],
+  quantity: 1,
+  expiryDate: '',
 })
 
-function handleSubmit() {
+onMounted(async () => {
+  if (!editingId.value) return
+
+  const existing = await foodStore.fetchFood(editingId.value)
+  form.name = existing.name
+  form.category = existing.category
+  form.quantity = existing.quantity
+  form.expiryDate = existing.expiryDate || ''
+  isLoading.value = false
+})
+
+async function handleSubmit() {
   if (!form.name.trim()) return
 
   const payload = {
@@ -28,25 +40,26 @@ function handleSubmit() {
   }
 
   if (editingId.value) {
-    updateItem(editingId.value, payload)
+    await foodStore.updateFood(editingId.value, payload)
   } else {
-    addItem(payload)
+    await foodStore.addFood(payload)
   }
 
-  router.push({ name: 'home' })
+  router.push({ name: 'refrigerator' })
 }
 
-function handleDelete() {
+async function handleDelete() {
   if (!editingId.value) return
-  deleteItem(editingId.value)
-  router.push({ name: 'home' })
+  await foodStore.deleteFood(editingId.value)
+  router.push({ name: 'refrigerator' })
 }
 </script>
 
 <template>
-  <main class="item-form-page">
+  <main class="food-form-page">
     <h1>{{ editingId ? '編輯物品' : '新增物品' }}</h1>
-    <form class="item-form" @submit.prevent="handleSubmit">
+    <p v-if="isLoading" class="loading">載入中…</p>
+    <form v-else class="food-form" @submit.prevent="handleSubmit">
       <label class="field">
         <span>名稱</span>
         <input v-model="form.name" type="text" placeholder="例如：牛奶" required />
@@ -74,18 +87,22 @@ function handleDelete() {
       <div class="actions">
         <button type="submit" class="submit">{{ editingId ? '儲存' : '新增' }}</button>
         <button v-if="editingId" type="button" class="delete" @click="handleDelete">刪除</button>
-        <RouterLink :to="{ name: 'home' }" class="cancel">取消</RouterLink>
+        <RouterLink :to="{ name: 'refrigerator' }" class="cancel">取消</RouterLink>
       </div>
     </form>
   </main>
 </template>
 
 <style scoped>
-.item-form-page {
+.food-form-page {
   padding: 16px;
 }
 
-.item-form {
+.loading {
+  color: var(--text);
+}
+
+.food-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -146,7 +163,7 @@ function handleDelete() {
 }
 
 @media (min-width: 768px) {
-  .item-form-page {
+  .food-form-page {
     padding: 32px;
   }
 }
