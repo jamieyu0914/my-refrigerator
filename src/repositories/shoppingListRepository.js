@@ -4,7 +4,7 @@ export async function getItems() {
   const { data, error } = await supabase
     .from('shopping_items')
     .select('*')
-    .order('added_at', { ascending: true })
+    .order('created_at', { ascending: true })
 
   if (error) throw error
   return data

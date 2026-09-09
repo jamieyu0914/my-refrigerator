@@ -1,25 +1,125 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { useShoppingListStore } from '../stores/shoppingList'
+import { useFoodStore } from '../stores/food'
+import { CATEGORIES } from '../utils/constants'
+import ShoppingItemRow from '../components/ShoppingItemRow.vue'
 
 const shoppingListStore = useShoppingListStore()
+const foodStore = useFoodStore()
+
 const isLoading = ref(true)
+const isAdding = ref(false)
+const errorMessage = ref('')
+
+const editingId = ref(null)
+const isSavingEdit = ref(false)
+const togglingIds = ref([])
+const deletingIds = ref([])
 
 const form = reactive({
   name: '',
   quantity: 1,
+  unit: '',
+  category: CATEGORIES[0],
 })
 
 onMounted(async () => {
-  await shoppingListStore.loadItems()
-  isLoading.value = false
+  try {
+    await shoppingListStore.loadItems()
+  } catch {
+    errorMessage.value = '載入採買清單失敗，請稍後再試。'
+  } finally {
+    isLoading.value = false
+  }
 })
 
 async function handleAdd() {
   if (!form.name.trim()) return
-  await shoppingListStore.addItem({ name: form.name.trim(), quantity: Number(form.quantity) || 1 })
-  form.name = ''
-  form.quantity = 1
+
+  errorMessage.value = ''
+  isAdding.value = true
+  try {
+    await shoppingListStore.addItem({
+      name: form.name.trim(),
+      quantity: Number(form.quantity) || 1,
+      unit: form.unit.trim(),
+      category: form.category,
+    })
+    form.name = ''
+    form.quantity = 1
+    form.unit = ''
+    form.category = CATEGORIES[0]
+  } catch {
+    errorMessage.value = '新增失敗，請稍後再試。'
+  } finally {
+    isAdding.value = false
+  }
+}
+
+async function handleToggle(id) {
+  if (togglingIds.value.includes(id)) return
+
+  const item = shoppingListStore.items.find((i) => i.id === id)
+  if (!item) return
+
+  errorMessage.value = ''
+  togglingIds.value.push(id)
+  const wasPurchased = item.purchased
+  try {
+    await shoppingListStore.togglePurchased(id)
+    if (!wasPurchased) {
+      await foodStore.addFood({
+        name: item.name,
+        category: item.category,
+        quantity: item.quantity,
+        expiryDate: null,
+      })
+    }
+  } catch {
+    errorMessage.value = '更新狀態失敗，請稍後再試。'
+  } finally {
+    togglingIds.value = togglingIds.value.filter((togglingId) => togglingId !== id)
+  }
+}
+
+function handleEditStart(id) {
+  errorMessage.value = ''
+  editingId.value = id
+}
+
+function handleEditCancel() {
+  editingId.value = null
+}
+
+async function handleEditSave({ id, updates }) {
+  if (isSavingEdit.value) return
+
+  errorMessage.value = ''
+  isSavingEdit.value = true
+  try {
+    await shoppingListStore.updateItem(id, updates)
+    editingId.value = null
+  } catch {
+    errorMessage.value = '修改失敗，請稍後再試。'
+  } finally {
+    isSavingEdit.value = false
+  }
+}
+
+async function handleDelete(id) {
+  if (deletingIds.value.includes(id)) return
+  if (!confirm('確定要刪除這個項目嗎？')) return
+
+  errorMessage.value = ''
+  deletingIds.value.push(id)
+  try {
+    await shoppingListStore.deleteItem(id)
+  } catch {
+    errorMessage.value = '刪除失敗，請稍後再試。'
+  } finally {
+    deletingIds.value = deletingIds.value.filter((deletingId) => deletingId !== id)
+  }
 }
 </script>
 
@@ -28,32 +128,49 @@ async function handleAdd() {
     <h1>採買清單</h1>
 
     <form class="add-form" @submit.prevent="handleAdd">
-      <input v-model="form.name" type="text" placeholder="要買什麼？" required />
-      <input v-model.number="form.quantity" type="number" min="1" />
-      <button type="submit">新增</button>
+      <input
+        v-model="form.name"
+        type="text"
+        placeholder="要買什麼？"
+        required
+        :disabled="isAdding"
+      />
+      <input v-model.number="form.quantity" type="number" min="1" :disabled="isAdding" />
+      <input
+        v-model="form.unit"
+        type="text"
+        placeholder="單位"
+        class="unit-input"
+        :disabled="isAdding"
+      />
+      <select v-model="form.category" class="category-select" :disabled="isAdding">
+        <option v-for="category in CATEGORIES" :key="category" :value="category">
+          {{ category }}
+        </option>
+      </select>
+      <button type="submit" :disabled="isAdding">{{ isAdding ? '新增中…' : '新增' }}</button>
     </form>
 
+    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <p v-if="isLoading" class="empty">載入中…</p>
-    <p v-else-if="shoppingListStore.items.length === 0" class="empty">採買清單是空的。</p>
+    <p v-else-if="shoppingListStore.items.length === 0" class="empty">
+      採買清單是空的，新增第一項吧！
+    </p>
     <ul v-else class="list">
-      <li v-for="item in shoppingListStore.items" :key="item.id" class="list-item">
-        <label class="check">
-          <input
-            type="checkbox"
-            :checked="item.checked"
-            @change="shoppingListStore.toggleChecked(item.id)"
-          />
-          <span :class="{ checked: item.checked }">{{ item.name }} × {{ item.quantity }}</span>
-        </label>
-        <button
-          type="button"
-          class="delete"
-          aria-label="刪除"
-          @click="shoppingListStore.deleteItem(item.id)"
-        >
-          🗑
-        </button>
-      </li>
+      <ShoppingItemRow
+        v-for="item in shoppingListStore.items"
+        :key="item.id"
+        :item="item"
+        :editing="editingId === item.id"
+        :saving="isSavingEdit && editingId === item.id"
+        :toggling="togglingIds.includes(item.id)"
+        :deleting="deletingIds.includes(item.id)"
+        @toggle="handleToggle"
+        @edit-start="handleEditStart"
+        @edit-cancel="handleEditCancel"
+        @edit-save="handleEditSave"
+        @delete="handleDelete"
+      />
     </ul>
   </main>
 </template>
@@ -78,10 +195,19 @@ async function handleAdd() {
 }
 
 .add-form input[type='number'] {
+  width: 64px;
+}
+
+.add-form .unit-input {
   width: 72px;
 }
 
-.add-form input {
+.add-form .category-select {
+  width: 96px;
+}
+
+.add-form input,
+.add-form select {
   min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--border);
@@ -89,6 +215,11 @@ async function handleAdd() {
   font-size: 16px;
   background: var(--bg);
   color: var(--text-h);
+}
+
+.add-form input:disabled,
+.add-form select:disabled {
+  opacity: 0.6;
 }
 
 .add-form button {
@@ -101,8 +232,16 @@ async function handleAdd() {
   font-size: 15px;
 }
 
+.add-form button:disabled {
+  opacity: 0.6;
+}
+
 .empty {
   color: var(--text);
+}
+
+.error {
+  color: #c53232;
 }
 
 .list {
@@ -112,43 +251,6 @@ async function handleAdd() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 8px 12px;
-}
-
-.check {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  flex: 1;
-}
-
-.check input[type='checkbox'] {
-  width: 20px;
-  height: 20px;
-}
-
-.checked {
-  text-decoration: line-through;
-  color: var(--text);
-}
-
-.delete {
-  min-width: 44px;
-  min-height: 44px;
-  border: none;
-  background: none;
-  font-size: 18px;
-  color: var(--text);
 }
 
 @media (min-width: 768px) {
