@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run --coverage",
+    "coverage": "node scripts/coverage-md.js",
     "license-checker": "license-checker --production --out THIRD-PARTY-LICENSES.txt"
   },
   "dependencies": {

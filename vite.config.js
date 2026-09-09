@@ -10,5 +10,12 @@ export default defineConfig(({ command }) => ({
   test: {
     environment: 'jsdom',
     globals: true,
+    reporters: ['default', 'json'],
+    outputFile: {
+      json: './coverage/test-results.json',
+    },
+    coverage: {
+      reporter: ['text', 'html', 'json', 'json-summary'],
+    },
   },
 }))
