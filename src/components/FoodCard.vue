@@ -4,6 +4,7 @@ import ExpiryBadge from './ExpiryBadge.vue'
 
 const props = defineProps({
   food: { type: Object, required: true },
+  deleting: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['delete'])
@@ -24,7 +25,13 @@ function edit() {
       </div>
       <ExpiryBadge :expiry-date="food.expiryDate" />
     </button>
-    <button type="button" class="food-delete" aria-label="刪除" @click="emit('delete', food.id)">
+    <button
+      type="button"
+      class="food-delete"
+      aria-label="刪除"
+      :disabled="deleting"
+      @click="emit('delete', food.id)"
+    >
       🗑
     </button>
   </article>
@@ -74,5 +81,9 @@ function edit() {
   background: none;
   font-size: 18px;
   color: var(--text);
+}
+
+.food-delete:disabled {
+  opacity: 0.5;
 }
 </style>

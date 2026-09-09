@@ -21,3 +21,7 @@ When database schema, migrations, or `src/repositories/`/`src/services/` data-ac
 ## Backend / Data Flow Conventions
 
 When adding or editing a Pinia store action, wiring a store to a service function, or handling errors/validation around a form submission, follow `.claude/skills/backend/SKILL.md`, which defines the store↔service contract, error propagation (services throw, stores don't catch, components catch and render `errorMessage`), and where input validation/normalization belongs.
+
+## Feature Conventions
+
+When building or adding a new feature end-to-end, follow `.claude/skills/feature/SKILL.md`, which defines the parts a complete feature must have (View, Components, Store, Service, Repository, Types, Test) and the step-by-step order to build one (confirm requirements → analyze data structure → design UI → define Types → build Repository/Service → build Store/Components → wire up error/loading state → test).
