@@ -31,7 +31,7 @@ const visibleFavoriteRecipes = computed(() =>
 const emptyMessage = computed(() =>
   searchQuery.value.trim()
     ? `找不到符合「${searchQuery.value.trim()}」的最愛食譜`
-    : '還沒有最愛食譜，去食譜列表按 ★ 收藏喜歡的食譜吧！',
+    : '還沒有最愛食譜，去食譜列表按 ♡ 收藏喜歡的食譜吧！',
 )
 
 async function handleToggleFavorite(id) {

@@ -1,20 +1,22 @@
 import { supabase } from '../services/supabaseClient'
 
-export async function getItems() {
+export async function getItems(userId) {
   const { data, error } = await supabase
     .from('recipes')
-    .select('*')
+    .select('*, favorite_recipes(user_id)')
+    .eq('favorite_recipes.user_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) throw error
   return data
 }
 
-export async function getItemById(id) {
+export async function getItemById(id, userId) {
   const { data, error } = await supabase
     .from('recipes')
-    .select('*, recipe_ingredients(*), recipe_steps(*)')
+    .select('*, recipe_ingredients(*), recipe_steps(*), favorite_recipes(user_id)')
     .eq('id', id)
+    .eq('favorite_recipes.user_id', userId)
     .single()
 
   if (error) throw error
@@ -51,4 +53,19 @@ export async function updateItem(id, payload) {
 
   if (error) throw error
   return data
+}
+
+export async function deleteItem(id) {
+  const { error } = await supabase.from('recipes').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteIngredients(recipeId) {
+  const { error } = await supabase.from('recipe_ingredients').delete().eq('recipe_id', recipeId)
+  if (error) throw error
+}
+
+export async function deleteSteps(recipeId) {
+  const { error } = await supabase.from('recipe_steps').delete().eq('recipe_id', recipeId)
+  if (error) throw error
 }

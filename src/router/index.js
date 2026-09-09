@@ -40,6 +40,12 @@ const router = createRouter({
       component: RecipeDetail,
       meta: { requiresAuth: true },
     },
+    {
+      path: '/recipes/:id/edit',
+      name: 'recipe-edit',
+      component: RecipeForm,
+      meta: { requiresAuth: true },
+    },
     { path: '/favorites', name: 'favorites', component: Favorites, meta: { requiresAuth: true } },
     {
       path: '/promotions',

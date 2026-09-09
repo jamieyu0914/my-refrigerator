@@ -8,6 +8,7 @@
  * @property {string|null} description
  * @property {string[]} tags
  * @property {boolean} isFavorite
+ * @property {boolean} isOwn
  * @property {string} createdAt
  * @property {string} updatedAt
  * @property {import('./recipeIngredient').RecipeIngredient[]|undefined} ingredients

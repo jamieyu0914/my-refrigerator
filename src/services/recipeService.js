@@ -3,10 +3,14 @@ import {
   createIngredients,
   createItem,
   createSteps,
+  deleteIngredients,
+  deleteItem,
+  deleteSteps,
   getItemById,
   getItems,
   updateItem,
 } from '../repositories/recipeRepository'
+import { createFavorite, deleteFavorite } from '../repositories/favoriteRecipeRepository'
 
 function toIngredient(row) {
   return {
@@ -25,7 +29,7 @@ function toStep(row) {
   }
 }
 
-function toRecipe(row) {
+function toRecipe(row, userId) {
   const recipe = {
     id: row.id,
     title: row.title,
@@ -34,7 +38,8 @@ function toRecipe(row) {
     difficulty: row.difficulty,
     description: row.description,
     tags: row.tags,
-    isFavorite: row.is_favorite,
+    isFavorite: (row.favorite_recipes ?? []).length > 0,
+    isOwn: row.user_id === userId,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -55,13 +60,15 @@ function toRecipe(row) {
 }
 
 export async function fetchRecipes() {
-  const rows = await getItems()
-  return rows.map(toRecipe)
+  const userId = await getCurrentUserId()
+  const rows = await getItems(userId)
+  return rows.map((row) => toRecipe(row, userId))
 }
 
 export async function fetchRecipeById(id) {
-  const row = await getItemById(id)
-  return toRecipe(row)
+  const userId = await getCurrentUserId()
+  const row = await getItemById(id, userId)
+  return toRecipe(row, userId)
 }
 
 export async function insertRecipe({
@@ -114,8 +121,49 @@ export async function updateRecipe(id, updates) {
   if ('difficulty' in updates) payload.difficulty = updates.difficulty
   if ('description' in updates) payload.description = updates.description
   if ('tags' in updates) payload.tags = updates.tags
-  if ('isFavorite' in updates) payload.is_favorite = updates.isFavorite
 
-  const row = await updateItem(id, payload)
-  return toRecipe(row)
+  if (Object.keys(payload).length > 0) {
+    await updateItem(id, payload)
+  }
+
+  if ('ingredients' in updates) {
+    await deleteIngredients(id)
+    await createIngredients(
+      updates.ingredients.map((ingredient, index) => ({
+        recipe_id: id,
+        name: ingredient.name,
+        amount: ingredient.amount || null,
+        sort_order: index,
+      })),
+    )
+  }
+
+  if ('steps' in updates) {
+    await deleteSteps(id)
+    await createSteps(
+      updates.steps.map((step, index) => ({
+        recipe_id: id,
+        description: step.description,
+        sort_order: index,
+      })),
+    )
+  }
+
+  return fetchRecipeById(id)
+}
+
+export async function deleteRecipe(id) {
+  await deleteItem(id)
+}
+
+export async function toggleFavorite(recipeId, currentValue) {
+  const userId = await getCurrentUserId()
+
+  if (currentValue) {
+    await deleteFavorite(userId, recipeId)
+  } else {
+    await createFavorite({ user_id: userId, recipe_id: recipeId })
+  }
+
+  return fetchRecipeById(recipeId)
 }

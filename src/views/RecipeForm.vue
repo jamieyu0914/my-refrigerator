@@ -1,13 +1,16 @@
 <script setup>
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useRecipeStore } from '../stores/recipe'
 
 const DIFFICULTIES = ['簡單', '普通', '困難']
 
+const route = useRoute()
 const router = useRouter()
 const recipeStore = useRecipeStore()
 
+const editingId = computed(() => route.params.id || null)
+const isLoading = ref(!!editingId.value)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 
@@ -20,6 +23,33 @@ const form = reactive({
   tagsText: '',
   ingredients: [{ name: '', amount: '' }],
   steps: [{ description: '' }],
+})
+
+onMounted(async () => {
+  if (!editingId.value) return
+
+  try {
+    const existing = await recipeStore.fetchRecipe(editingId.value)
+    form.title = existing.title
+    form.imageUrl = existing.imageUrl || ''
+    form.cookTimeMinutes = existing.cookTimeMinutes ?? ''
+    form.difficulty = existing.difficulty || DIFFICULTIES[0]
+    form.description = existing.description || ''
+    form.tagsText = existing.tags.join(', ')
+    form.ingredients = existing.ingredients.length
+      ? existing.ingredients.map((ingredient) => ({
+          name: ingredient.name,
+          amount: ingredient.amount || '',
+        }))
+      : [{ name: '', amount: '' }]
+    form.steps = existing.steps.length
+      ? existing.steps.map((step) => ({ description: step.description }))
+      : [{ description: '' }]
+  } catch {
+    errorMessage.value = '載入食譜資料失敗，請稍後再試。'
+  } finally {
+    isLoading.value = false
+  }
 })
 
 function addIngredient() {
@@ -66,10 +96,31 @@ async function handleSubmit() {
   errorMessage.value = ''
   isSubmitting.value = true
   try {
-    await recipeStore.addRecipe(payload)
-    router.push({ name: 'recipes' })
+    if (editingId.value) {
+      await recipeStore.updateRecipe(editingId.value, payload)
+      router.push({ name: 'recipe-detail', params: { id: editingId.value } })
+    } else {
+      await recipeStore.addRecipe(payload)
+      router.push({ name: 'recipes' })
+    }
   } catch {
     errorMessage.value = '儲存失敗，請稍後再試。'
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+async function handleDelete() {
+  if (!editingId.value) return
+  if (!confirm('確定要刪除這份食譜嗎？')) return
+
+  errorMessage.value = ''
+  isSubmitting.value = true
+  try {
+    await recipeStore.deleteRecipe(editingId.value)
+    router.push({ name: 'recipes' })
+  } catch {
+    errorMessage.value = '刪除失敗，請稍後再試。'
   } finally {
     isSubmitting.value = false
   }
@@ -78,9 +129,10 @@ async function handleSubmit() {
 
 <template>
   <main class="recipe-form-page">
-    <h1>新增食譜</h1>
+    <h1>{{ editingId ? '編輯食譜' : '新增食譜' }}</h1>
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-    <form class="recipe-form" @submit.prevent="handleSubmit">
+    <p v-if="isLoading" class="loading">載入中…</p>
+    <form v-else class="recipe-form" @submit.prevent="handleSubmit">
       <label class="field">
         <span>標題</span>
         <input v-model="form.title" type="text" placeholder="例如：番茄炒蛋" required />
@@ -153,7 +205,16 @@ async function handleSubmit() {
 
       <div class="actions">
         <button type="submit" class="submit" :disabled="isSubmitting">
-          {{ isSubmitting ? '儲存中…' : '新增' }}
+          {{ isSubmitting ? '儲存中…' : editingId ? '儲存' : '新增' }}
+        </button>
+        <button
+          v-if="editingId"
+          type="button"
+          class="delete"
+          :disabled="isSubmitting"
+          @click="handleDelete"
+        >
+          刪除
         </button>
         <RouterLink :to="{ name: 'recipes' }" class="cancel">取消</RouterLink>
       </div>
@@ -164,6 +225,10 @@ async function handleSubmit() {
 <style scoped>
 .recipe-form-page {
   padding: 16px;
+}
+
+.loading {
+  color: var(--text);
 }
 
 .error {
@@ -283,8 +348,19 @@ async function handleSubmit() {
   font-size: 16px;
 }
 
-.submit:disabled {
+.submit:disabled,
+.delete:disabled {
   opacity: 0.6;
+}
+
+.delete {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: #c53232;
+  font-size: 16px;
 }
 
 .cancel {

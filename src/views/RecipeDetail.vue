@@ -1,15 +1,17 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useRecipeStore } from '../stores/recipe'
 
 const route = useRoute()
+const router = useRouter()
 const recipeStore = useRecipeStore()
 
 const recipe = ref(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 const isTogglingFavorite = ref(false)
+const isDeleting = ref(false)
 
 onMounted(async () => {
   try {
@@ -34,6 +36,22 @@ async function handleToggleFavorite() {
     isTogglingFavorite.value = false
   }
 }
+
+async function handleDelete() {
+  if (isDeleting.value || !recipe.value) return
+  if (!confirm('確定要刪除這份食譜嗎？')) return
+
+  errorMessage.value = ''
+  isDeleting.value = true
+  try {
+    await recipeStore.deleteRecipe(recipe.value.id)
+    router.push({ name: 'recipes' })
+  } catch {
+    errorMessage.value = '刪除失敗，請稍後再試。'
+  } finally {
+    isDeleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -48,11 +66,19 @@ async function handleToggleFavorite() {
         <button
           type="button"
           class="favorite"
-          :aria-label="recipe.isFavorite ? '移除最愛' : '加入最愛'"
+          :aria-label="recipe.isFavorite ? '已加入最愛' : '加入最愛'"
           :disabled="isTogglingFavorite"
           @click="handleToggleFavorite"
         >
-          {{ recipe.isFavorite ? '★ 已收藏' : '☆ 加入最愛' }}
+          {{ recipe.isFavorite ? '❤️ 已加入最愛' : '♡ 加入最愛' }}
+        </button>
+      </div>
+      <div v-if="recipe.isOwn" class="owner-actions">
+        <RouterLink :to="{ name: 'recipe-edit', params: { id: recipe.id } }" class="edit">
+          編輯
+        </RouterLink>
+        <button type="button" class="delete" :disabled="isDeleting" @click="handleDelete">
+          {{ isDeleting ? '刪除中…' : '刪除' }}
         </button>
       </div>
       <p v-if="recipe.cookTimeMinutes || recipe.difficulty" class="meta">
@@ -68,7 +94,7 @@ async function handleToggleFavorite() {
         <h2>食材</h2>
         <ul class="ingredients">
           <li v-for="ingredient in recipe.ingredients" :key="ingredient.id">
-            {{ ingredient.name }}<template v-if="ingredient.amount"> {{ ingredient.amount }}</template>
+            {{ ingredient.amount ? `${ingredient.name} ${ingredient.amount}` : ingredient.name }}
           </li>
         </ul>
       </section>
@@ -139,6 +165,37 @@ async function handleToggleFavorite() {
 }
 
 .favorite:disabled {
+  opacity: 0.6;
+}
+
+.owner-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.edit {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-h);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.delete {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: #c53232;
+  font-size: 14px;
+}
+
+.delete:disabled {
   opacity: 0.6;
 }
 

@@ -37,11 +37,11 @@ function openDetail() {
     <button
       type="button"
       class="recipe-favorite"
-      :aria-label="recipe.isFavorite ? '移除最愛' : '加入最愛'"
+      :aria-label="recipe.isFavorite ? '已加入最愛' : '加入最愛'"
       :disabled="toggling"
       @click.stop="emit('toggle-favorite', recipe.id)"
     >
-      {{ recipe.isFavorite ? '★' : '☆' }}
+      {{ recipe.isFavorite ? '❤️' : '♡' }}
     </button>
   </article>
 </template>
