@@ -13,10 +13,15 @@ function mountResult(props) {
 
 describe('AiRecognitionResult.vue', () => {
   it('shows an empty-state message with a manual-add link when there are no items', () => {
-    const wrapper = mountResult({ items: [] })
+    // A plain `true` stub never invokes RouterLink's default slot, so the link text would
+    // never actually render/execute - use a template stub here to cover that content too.
+    const wrapper = mount(AiRecognitionResult, {
+      props: { items: [] },
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    })
 
     expect(wrapper.text()).toContain('沒有辨識到食材')
-    expect(wrapper.find('router-link-stub').exists()).toBe(true)
+    expect(wrapper.text()).toContain('手動新增')
   })
 
   it('renders each item name, category and emoji', () => {

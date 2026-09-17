@@ -22,7 +22,7 @@ async function handleSelect(file) {
     await aiVisionStore.analyzeImage(file)
     hasAnalyzed.value = true
   } catch (error) {
-    console.error('AI 食材辨識失敗', error)
+    // console.error('AI 食材辨識失敗', error)
     errorMessage.value = '辨識失敗，請稍後再試或手動新增。'
   } finally {
     isAnalyzing.value = false
@@ -53,7 +53,7 @@ async function handleConfirm() {
     await aiVisionStore.confirmSelected()
     router.push({ name: 'refrigerator' })
   } catch (error) {
-    console.error('加入冰箱失敗', error)
+    // console.error('加入冰箱失敗', error)
     errorMessage.value = '部分項目加入失敗，請重試。'
   } finally {
     isSubmitting.value = false

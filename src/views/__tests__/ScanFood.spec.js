@@ -94,6 +94,54 @@ describe('ScanFood.vue', () => {
     expect(updateItem).toHaveBeenCalledWith('1', { selected: false })
   })
 
+  it('ignores a toggle for an unknown tempId', async () => {
+    const updateItem = vi.fn()
+    const recognizedItems = [{ tempId: '1', name: '雞蛋', selected: true }]
+    const wrapper = mountWithStore({ recognizedItems, updateItem })
+    wrapper.findComponent(ImageCapture).vm.$emit('select', new File([], 'a.jpg'))
+    await flushPromises()
+
+    wrapper.findComponent(AiRecognitionResult).vm.$emit('toggle', 'missing')
+
+    expect(updateItem).not.toHaveBeenCalled()
+  })
+
+  it('updates an item name through the store', async () => {
+    const updateItem = vi.fn()
+    const recognizedItems = [{ tempId: '1', name: '雞蛋', selected: true }]
+    const wrapper = mountWithStore({ recognizedItems, updateItem })
+    wrapper.findComponent(ImageCapture).vm.$emit('select', new File([], 'a.jpg'))
+    await flushPromises()
+
+    wrapper.findComponent(AiRecognitionResult).vm.$emit('update-name', '1', '茶葉蛋')
+
+    expect(updateItem).toHaveBeenCalledWith('1', { name: '茶葉蛋' })
+  })
+
+  it('updates an item category through the store', async () => {
+    const updateItem = vi.fn()
+    const recognizedItems = [{ tempId: '1', name: '雞蛋', selected: true }]
+    const wrapper = mountWithStore({ recognizedItems, updateItem })
+    wrapper.findComponent(ImageCapture).vm.$emit('select', new File([], 'a.jpg'))
+    await flushPromises()
+
+    wrapper.findComponent(AiRecognitionResult).vm.$emit('update-category', '1', '肉類')
+
+    expect(updateItem).toHaveBeenCalledWith('1', { category: '肉類' })
+  })
+
+  it('removes an item through the store', async () => {
+    const removeItem = vi.fn()
+    const recognizedItems = [{ tempId: '1', name: '雞蛋', selected: true }]
+    const wrapper = mountWithStore({ recognizedItems, removeItem })
+    wrapper.findComponent(ImageCapture).vm.$emit('select', new File([], 'a.jpg'))
+    await flushPromises()
+
+    wrapper.findComponent(AiRecognitionResult).vm.$emit('remove', '1')
+
+    expect(removeItem).toHaveBeenCalledWith('1')
+  })
+
   it('confirms selected items and navigates to the refrigerator on success', async () => {
     const confirmSelected = vi.fn().mockResolvedValue(undefined)
     const recognizedItems = [{ tempId: '1', name: '雞蛋', selected: true }]

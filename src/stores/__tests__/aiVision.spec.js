@@ -41,6 +41,16 @@ describe('aiVision store', () => {
     expect(store.recognizedItems[0].selected).toBe(false)
   })
 
+  it('updateItem is a no-op for an unknown tempId', () => {
+    const store = useAiVisionStore()
+    const items = [{ tempId: '1', name: '雞蛋', category: '其他', selected: true }]
+    store.recognizedItems = items
+
+    store.updateItem('missing', { selected: false })
+
+    expect(store.recognizedItems).toEqual(items)
+  })
+
   it('removeItem drops the matching draft item', () => {
     const store = useAiVisionStore()
     store.recognizedItems = [

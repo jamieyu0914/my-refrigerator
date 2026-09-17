@@ -47,4 +47,31 @@ describe('ImageCapture.vue', () => {
 
     expect(clickSpy).toHaveBeenCalled()
   })
+
+  it('does nothing when the file dialog is dismissed with no file chosen', async () => {
+    const wrapper = mount(ImageCapture)
+    const input = wrapper.find('input[type="file"]')
+
+    Object.defineProperty(input.element, 'files', { value: [] })
+    await input.trigger('change')
+
+    expect(wrapper.emitted('select')).toBeUndefined()
+    expect(wrapper.find('.preview').exists()).toBe(false)
+  })
+
+  it('revokes the previous preview URL when a second photo is selected', async () => {
+    const wrapper = mount(ImageCapture)
+    const input = wrapper.find('input[type="file"]')
+    const firstFile = makeFile()
+    const secondFile = makeFile()
+
+    Object.defineProperty(input.element, 'files', { value: [firstFile], configurable: true })
+    await input.trigger('change')
+
+    Object.defineProperty(input.element, 'files', { value: [secondFile], configurable: true })
+    await input.trigger('change')
+
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-preview')
+    expect(wrapper.emitted('select')).toEqual([[firstFile], [secondFile]])
+  })
 })

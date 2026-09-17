@@ -72,6 +72,26 @@ describe('aiVisionService', () => {
     expect(lastCanvas.height).toBe(600)
   })
 
+  it('rejects when the canvas fails to produce a blob', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(function (callback) {
+      callback(null)
+    })
+
+    await expect(recognizeFoods(makeFile())).rejects.toThrow('圖片轉換失敗')
+  })
+
+  it('rejects when reading the re-encoded image fails', async () => {
+    class FailingFileReader {
+      readAsDataURL() {
+        this.error = new Error('read failed')
+        this.onerror()
+      }
+    }
+    vi.stubGlobal('FileReader', FailingFileReader)
+
+    await expect(recognizeFoods(makeFile())).rejects.toThrow('read failed')
+  })
+
   it('releases the decoded bitmap after use', async () => {
     supabase.functions.invoke.mockResolvedValue({ data: { items: [] }, error: null })
 
