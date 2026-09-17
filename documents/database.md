@@ -2,12 +2,15 @@
 
 ```
 supabase/
-└── migrations/
-    ├── 20260905000000_init_schema.sql       # v1 schema：categories／profiles／foods／shopping_items／recipes／promotions，含 RLS 政策與 handle_new_user trigger
-    ├── 20260910000000_shopping_items_v2.sql # v2：shopping_items 改欄位（checked→purchased、added_at→created_at），新增 unit／category_code／updated_at（含 set_updated_at trigger）
-    ├── 20260910010000_recipe_details.sql    # v3：recipes 新增 cook_time_minutes／difficulty／description／updated_at（重用 set_updated_at trigger），把 ingredients(jsonb)／instructions(text) 正規化成 recipe_ingredients／recipe_steps 兩張子表（含資料搬移＋drop 舊欄位）
-    ├── 20260910020000_seed_recipes.sql       # 純資料 migration：對 auth.users 裡每個既有使用者各灌一份 100 筆種子食譜（含 recipe_ingredients／recipe_steps），不改 schema
-    └── 20260910030000_shared_recipes_favorites.sql # v4：recipes 從「每人私有」改成「大家共用的食譜庫」——select 開放給所有登入使用者，insert/update/delete 限建立者；recipe_ingredients／recipe_steps 的 RLS 同樣拆成「select 開放／寫入限建立者」；新增 favorite_recipes(user_id, recipe_id) 多對多關聯表取代 recipes.is_favorite（含資料搬移＋drop 舊欄位）
+├── migrations/
+│   ├── 20260905000000_init_schema.sql       # v1 schema：categories／profiles／foods／shopping_items／recipes／promotions，含 RLS 政策與 handle_new_user trigger
+│   ├── 20260910000000_shopping_items_v2.sql # v2：shopping_items 改欄位（checked→purchased、added_at→created_at），新增 unit／category_code／updated_at（含 set_updated_at trigger）
+│   ├── 20260910010000_recipe_details.sql    # v3：recipes 新增 cook_time_minutes／difficulty／description／updated_at（重用 set_updated_at trigger），把 ingredients(jsonb)／instructions(text) 正規化成 recipe_ingredients／recipe_steps 兩張子表（含資料搬移＋drop 舊欄位）
+│   ├── 20260910020000_seed_recipes.sql       # 純資料 migration：對 auth.users 裡每個既有使用者各灌一份 100 筆種子食譜（含 recipe_ingredients／recipe_steps），不改 schema
+│   └── 20260910030000_shared_recipes_favorites.sql # v4：recipes 從「每人私有」改成「大家共用的食譜庫」——select 開放給所有登入使用者，insert/update/delete 限建立者；recipe_ingredients／recipe_steps 的 RLS 同樣拆成「select 開放／寫入限建立者」；新增 favorite_recipes(user_id, recipe_id) 多對多關聯表取代 recipes.is_favorite（含資料搬移＋drop 舊欄位）
+├── functions/
+│   └── analyze-food-image/index.ts  # Supabase Edge Function（Deno，不是這個 npm 專案的一部分）：收圖片 base64，呼叫 Anthropic API（claude-opus-5）用 structured output 辨識食材，回傳 { items: [{ name, category, confidence }] }；手動驗證 Authorization header 拿使用者身分（config.toml 關掉平台自動 verify_jwt，因為那個檢查會讓瀏覽器的 CORS preflight 誤判成失敗）；ANTHROPIC_API_KEY 只存在 Supabase 的 function secrets，不會流向前端
+└── config.toml                 # 目前只設定 analyze-food-image 的 verify_jwt = false
 
 src/
 ├── repositories/
@@ -21,16 +24,18 @@ src/
 │   ├── authService.js           # 呼叫 authRepository，組成 toUser()（session + profiles.name）回傳給 stores/auth.js
 │   ├── foodService.js           # 呼叫 refrigeratorRepository，做 category_code↔category／expiry_date↔expiryDate 等欄位轉換
 │   ├── shoppingListService.js   # 呼叫 shoppingListRepository，做 category_code↔category／purchased／unit／created_at↔createdAt／updated_at↔updatedAt 轉換
-│   └── recipeService.js         # 同時呼叫 recipeRepository 與 favoriteRecipeRepository（食譜這個 domain 本來就橫跨好幾張表），做 image_url↔imageUrl／cook_time_minutes↔cookTimeMinutes／created_at↔createdAt／updated_at↔updatedAt 轉換；isFavorite 改成從 embed 回來的 favorite_recipes 陣列是否非空推導（不是欄位），isOwn 則是比對 row.user_id 是否等於目前使用者 id；fetchRecipes／fetchRecipeById 都要先 getCurrentUserId() 再把 userId 傳給 repository 過濾 embed；updateRecipe(id, updates) 若 updates 帶了 ingredients／steps，會先刪掉該 recipe 底下所有舊的子表資料再整批重新 insert（不做逐筆 diff／update）；deleteRecipe(id) 直接刪 recipes 一列，子表靠 on delete cascade 自動清掉；toggleFavorite(recipeId, currentValue) 依 currentValue 呼叫 createFavorite／deleteFavorite，再 fetchRecipeById 回傳最新物件
+│   ├── recipeService.js         # 同時呼叫 recipeRepository 與 favoriteRecipeRepository（食譜這個 domain 本來就橫跨好幾張表），做 image_url↔imageUrl／cook_time_minutes↔cookTimeMinutes／created_at↔createdAt／updated_at↔updatedAt 轉換；isFavorite 改成從 embed 回來的 favorite_recipes 陣列是否非空推導（不是欄位），isOwn 則是比對 row.user_id 是否等於目前使用者 id；fetchRecipes／fetchRecipeById 都要先 getCurrentUserId() 再把 userId 傳給 repository 過濾 embed；updateRecipe(id, updates) 若 updates 帶了 ingredients／steps，會先刪掉該 recipe 底下所有舊的子表資料再整批重新 insert（不做逐筆 diff／update）；deleteRecipe(id) 直接刪 recipes 一列，子表靠 on delete cascade 自動清掉；toggleFavorite(recipeId, currentValue) 依 currentValue 呼叫 createFavorite／deleteFavorite，再 fetchRecipeById 回傳最新物件
+│   └── aiVisionService.js       # 例外：不經過 repositories 層，直接呼叫 `supabase.functions.invoke('analyze-food-image')`（因為辨識不是資料表 CRUD，是呼叫 Edge Function）；本機先把圖片縮到長邊 ≤1568px 的 JPEG 再轉 base64 送出（手機拍照的 HEIC／大圖 Anthropic API 不接受），圖片本身不會被上傳儲存到任何 Supabase 資料表或 Storage
 └── types/
     ├── user.js                  # User：id／email／name，對應 auth.users + profiles
     ├── food.js                  # Food：對應 foods 表
     ├── shoppingItem.js          # ShoppingItem：id／name／quantity／unit／category／purchased／createdAt／updatedAt，對應 shopping_items 表（v2 schema）
     ├── recipe.js                # Recipe：id／title／imageUrl／cookTimeMinutes／difficulty／description／tags／isFavorite／isOwn／createdAt／updatedAt，對應 recipes 表；isOwn 是「這份食譜是不是目前使用者建立的」，只用來控制編輯/刪除按鈕要不要顯示；ingredients／steps 只有查詳情（fetchRecipeById）時才會有值
     ├── recipeIngredient.js      # RecipeIngredient：id／name／amount／sortOrder，對應 recipe_ingredients 表
-    └── recipeStep.js            # RecipeStep：id／description／sortOrder，對應 recipe_steps 表
+    ├── recipeStep.js            # RecipeStep：id／description／sortOrder，對應 recipe_steps 表
+    └── foodRecognition.js       # RecognizedFoodItem：tempId（前端 crypto.randomUUID()，不是資料庫 id）／name／category／emoji／confidence／selected——純前端草稿形狀，不對應任何資料表
 
-.env.example                     # VITE_SUPABASE_URL／VITE_SUPABASE_ANON_KEY 佔位範本，實際值放 .env（已 gitignore）
+.env.example                     # VITE_SUPABASE_URL／VITE_SUPABASE_ANON_KEY（前端）＋ SUPABASE_ACCESS_TOKEN／SUPABASE_PROJECT_REF（CLI 部署用）＋ ANTHROPIC_API_KEY（Edge Function secret）佔位範本，實際值放 .env（已 gitignore）
 ```
 
 ## 資料庫架構圖
@@ -145,6 +150,12 @@ flowchart LR
     SV --> R["src/repositories/*.js\n(refrigeratorRepository、shoppingListRepository、authRepository)"]
     R --> C["supabaseClient.js\n(唯一 createClient 實例 + getCurrentUserId())"]
     C --> DB[("Supabase\nPostgres + Auth + RLS")]
+
+    SF["ScanFood.vue"] --> AVS["stores/aiVision.js\n(草稿，僅本地記憶體)"]
+    AVS --> AVSV["services/aiVisionService.js"]
+    AVSV -- "supabase.functions.invoke()" --> EF["Edge Function\nanalyze-food-image (Deno)"]
+    EF -- "Anthropic API" --> AI[("Claude\n圖片辨識")]
+    AVS -- "使用者按下「確認」\nconfirmSelected()" --> S
 ```
 
 ## 重點功能
@@ -157,7 +168,8 @@ flowchart LR
 - **Food／採買清單已完成串接**：`foodService.js`／`shoppingListService.js` 各自呼叫對應 repository，並做 `category_code`↔`category`、`expiry_date`↔`expiryDate`、`purchased`／`unit`、`created_at`↔`createdAt`／`updated_at`↔`updatedAt` 等欄位轉換；寫入時透過 `supabaseClient.js` 的 `getCurrentUserId()` 帶上 `user_id` 以符合 RLS 的 `with check`。`stores/food.js`／`stores/shoppingList.js` 的動作都是 async，各自有 `loadFoods()`／`loadItems()` 由對應頁面在 `onMounted` 呼叫；`FoodForm.vue` 編輯模式改成用 `fetchFood(id)` 直接向資料庫查單筆，不依賴列表快取
 - **食譜是共用食譜庫，最愛是多對多關聯**：`recipeService.js` 同時呼叫 `recipeRepository.js`（`recipes`／`recipe_ingredients`／`recipe_steps`）與 `favoriteRecipeRepository.js`（`favorite_recipes`）；`fetchRecipes`（列表，不含子表）／`fetchRecipeById`（詳情，用 Supabase FK embed 帶出 `recipe_ingredients`／`recipe_steps`）都先 `getCurrentUserId()`，再把 userId 傳進 repository 用來過濾內嵌的 `favorite_recipes(user_id)`——這是 PostgREST 的標準寫法：`.eq('favorite_recipes.user_id', userId)` 只會篩選內嵌陣列的內容，不會把沒收藏的食譜整列排除，`isFavorite` 就是看這個內嵌陣列是不是非空；`toggleFavorite(recipeId, currentValue)` 依 `currentValue` 呼叫 `createFavorite`／`deleteFavorite` 新增或刪除一筆關聯，再 `fetchRecipeById` 回傳最新物件。`insertRecipe` 新增流程不變（recipe → recipe_ingredients → recipe_steps → 重新查一次）
 - **食譜編輯／刪除已接上，靠原本就備好的 RLS**：`recipeService.updateRecipe(id, updates)` 更新 `recipes` 本體欄位，若 `updates` 帶 `ingredients`／`steps` 就先 `deleteIngredients`／`deleteSteps` 整批刪光再重新 `createIngredients`／`createSteps`（不是逐筆比對更新，簡單但每次編輯都是整批換掉）；`deleteRecipe(id)` 直接刪 `recipes` 一列，靠 `on delete cascade` 自動清掉該食譜的 `recipe_ingredients`／`recipe_steps`／`favorite_recipes`（包括別人對這份食譜的收藏）。RLS 在 `20260910030000_shared_recipes_favorites.sql` 就已經把 update/delete 限制在 `auth.uid() = user_id`（建立者），這次應用層只是把已經存在的資料庫權限接上 UI，沒有新增 migration
-- **環境變數**：`VITE_SUPABASE_URL`／`VITE_SUPABASE_ANON_KEY` 放本機的 `.env`（已在 `.gitignore`，不會進版控），`.env.example` 提供欄位範本供新環境設定
+- **環境變數**：`VITE_SUPABASE_URL`／`VITE_SUPABASE_ANON_KEY` 放本機的 `.env`（已在 `.gitignore`，不會進版控），`.env.example` 提供欄位範本供新環境設定；`SUPABASE_ACCESS_TOKEN`／`SUPABASE_PROJECT_REF`／`ANTHROPIC_API_KEY` 是給 Supabase CLI／Edge Function 部署用的，不會被 Vite 打包進前端（詳見 `documents/dev.md`）
+- **AI 辨識繞過 repositories 層，直接呼叫 Edge Function**：`aiVisionService.js` 是目前唯一不經過 `src/repositories/*.js` 就對外發request的 service——因為辨識食材不是 Supabase 資料表的 CRUD，而是呼叫 `supabase.functions.invoke('analyze-food-image')` 打到 `supabase/functions/analyze-food-image/index.ts` 這個 Deno Edge Function，再由它去打 Anthropic API；圖片與辨識結果都不落地到任何 Supabase 資料表或 Storage，使用者在 `AiRecognitionResult.vue` 確認過的項目最終還是透過既有的 `foodStore.addFood()` → `foodService` → `refrigeratorRepository` 這條路徑寫進 `foods` 表，沿用同一套 RLS（詳見 `documents/backend.md` 的 AI 辨識草稿流程）
 
 ## 本機設定：建立測試帳號並登入
 

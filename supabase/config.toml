@@ -1,0 +1,7 @@
+project_id = "bjkeewispfqbyhamzgwl"
+
+# The platform's automatic JWT check runs before CORS preflight (OPTIONS) requests reach the
+# function, so a browser's preflight gets rejected before it ever sees our CORS headers - the
+# browser then misreports it as a CORS failure. Auth is verified inside index.ts instead.
+[functions.analyze-food-image]
+verify_jwt = false
