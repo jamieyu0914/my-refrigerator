@@ -8,6 +8,7 @@ const auth = useAuthStore()
 const navLinks = [
   { name: 'home', label: '首頁' },
   { name: 'refrigerator', label: '我的冰箱' },
+  { name: 'scan', label: '拍照辨識' },
   { name: 'shopping-list', label: '採買清單' },
   { name: 'recipes', label: '食譜' },
   { name: 'favorites', label: '最愛食譜' },

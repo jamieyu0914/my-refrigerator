@@ -10,6 +10,7 @@ import Favorites from '../views/Favorites.vue'
 import Promotions from '../views/Promotions.vue'
 import Login from '../views/Login.vue'
 import FoodForm from '../views/FoodForm.vue'
+import ScanFood from '../views/ScanFood.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +62,7 @@ const router = createRouter({
     },
     { path: '/food/new', name: 'food-new', component: FoodForm, meta: { requiresAuth: true } },
     { path: '/food/:id/edit', name: 'food-edit', component: FoodForm, meta: { requiresAuth: true } },
+    { path: '/scan', name: 'scan', component: ScanFood, meta: { requiresAuth: true } },
   ],
 })
 

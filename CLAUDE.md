@@ -25,3 +25,7 @@ When adding or editing a Pinia store action, wiring a store to a service functio
 ## Feature Conventions
 
 When building or adding a new feature end-to-end, follow `.claude/skills/feature/SKILL.md`, which defines the parts a complete feature must have (View, Components, Store, Service, Repository, Types, Test) and the step-by-step order to build one (confirm requirements → analyze data structure → design UI → define Types → build Repository/Service → build Store/Components → wire up error/loading state → test).
+
+## AI Vision Conventions
+
+When adding or editing any AI image-recognition feature (e.g. scanning a photo to detect food items), follow `.claude/skills/ai-vision/SKILL.md`, which defines the fixed pipeline (image input → AI Vision analysis → recognized items → structured output → user confirmation → write to fridge) and the hard rule that recognition results are drafts shown for user review/edit and are never written to Supabase until the user explicitly confirms — AI Vision is positioned as an assistant that helps input data, not an always-correct source of truth.

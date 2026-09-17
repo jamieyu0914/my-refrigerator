@@ -9,6 +9,12 @@ dist-ssr/
 .env
 .env.local
 .env.*.local
+supabase/functions/**/.env
+supabase/functions/**/.env.local
+
+# Supabase CLI local state (machine-specific link/version cache, not project config)
+supabase/.temp/
+supabase/.branches/
 
 # Logs
 logs/
