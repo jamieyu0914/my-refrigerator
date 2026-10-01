@@ -4,6 +4,7 @@ import { CATEGORIES } from '../utils/constants'
 const EMOJI_BY_CATEGORY = {
   蔬果: '🥬',
   肉類: '🍗',
+  海鮮: '🦐',
   乳製品: '🥛',
   飲品: '🥤',
   其他: '🍽️',

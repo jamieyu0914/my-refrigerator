@@ -29,3 +29,7 @@ When building or adding a new feature end-to-end, follow `.claude/skills/feature
 ## AI Vision Conventions
 
 When adding or editing any AI image-recognition feature (e.g. scanning a photo to detect food items), follow `.claude/skills/ai-vision/SKILL.md`, which defines the fixed pipeline (image input → AI Vision analysis → recognized items → structured output → user confirmation → write to fridge) and the hard rule that recognition results are drafts shown for user review/edit and are never written to Supabase until the user explicitly confirms — AI Vision is positioned as an assistant that helps input data, not an always-correct source of truth.
+
+## Data Model Conventions
+
+When adding or changing a field on a domain type in `src/types/`, writing a service `toX()` mapper or partial-update payload, adding an enum-like value set (categories, difficulty), handling dates/nulls, or adding seed rows/test fixtures, follow `.claude/skills/data/SKILL.md`, which defines one typedef shape per domain, explicit row↔object mapping in services, a single source of truth per value set (and the places it must be kept in sync: `src/utils/constants.js`, the DB seed/check constraint, the AI Edge Function), calendar-date vs timestamp handling, `null`-not-`''` for optional fields, and snake_case-row fixtures for service specs.
