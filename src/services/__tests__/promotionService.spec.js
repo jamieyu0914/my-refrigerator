@@ -69,6 +69,14 @@ describe('promotionService', () => {
     expect(promotion.badges).toEqual(['price_drop', 'discount_price', 'deep_discount'])
   })
 
+  it('has no badges when no flag is set', async () => {
+    repository.getItems.mockResolvedValue([dealRow({ is_discount_price: false })])
+
+    const [promotion] = await fetchPromotions()
+
+    expect(promotion.badges).toEqual([])
+  })
+
   it('keeps null discount_rate/market_price as null and coerces a string numeric', async () => {
     repository.getItems.mockResolvedValue([
       dealRow({ discount_rate: null, market_price: null, image_url: null }),

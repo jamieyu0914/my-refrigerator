@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { API_URL, fetchCategoryProducts, PAGE_SIZE } from '../client'
+import { API_URL, fetchCategoryProducts, PAGE_SIZE, sleep } from '../client'
 
 function jsonResponse(body, { ok = true, status = 200 } = {}) {
   return { ok, status, json: () => Promise.resolve(body) }
@@ -12,6 +12,23 @@ function page(productIds, totalPage) {
     data: { product_list: productIds.map((id) => ({ id })), total_page: totalPage },
   })
 }
+
+describe('sleep', () => {
+  it('resolves after the given delay', async () => {
+    vi.useFakeTimers()
+    try {
+      const done = vi.fn()
+      const promise = sleep(500).then(done)
+      await vi.advanceTimersByTimeAsync(499)
+      expect(done).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(1)
+      await promise
+      expect(done).toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
 
 describe('fetchCategoryProducts', () => {
   it('requests every page of the category and concatenates the products', async () => {
@@ -33,6 +50,17 @@ describe('fetchCategoryProducts', () => {
     expect(firstUrl.searchParams.get('PageIndex')).toBe('1')
     expect(firstUrl.searchParams.get('PageSize')).toBe(String(PAGE_SIZE))
     expect(new URL(fetchImpl.mock.calls[1][0]).searchParams.get('PageIndex')).toBe('2')
+  })
+
+  it('treats a missing total_page as a single page', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse({ code: '0000', data: { product_list: [{ id: 1 }] } }),
+    )
+
+    const products = await fetchCategoryProducts(1846, { fetchImpl, wait: vi.fn() })
+
+    expect(products).toEqual([{ id: 1 }])
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
   })
 
   it('waits between page requests to rate-limit itself', async () => {

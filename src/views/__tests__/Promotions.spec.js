@@ -226,6 +226,59 @@ describe('Promotions.vue', () => {
     })
   })
 
+  it('ignores a stale load that fails after a newer load started', async () => {
+    let rejectFirst
+    const loadPromotions = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise((_, reject) => (rejectFirst = reject)))
+      .mockResolvedValue(undefined)
+    const { wrapper } = mountWithStores({ promotion: { loadPromotions } })
+
+    await wrapper.findAllComponents(CategoryFilter)[1].vm.$emit('update:modelValue', '海鮮')
+    await flushPromises()
+    rejectFirst(new Error('stale'))
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('載入特價食材失敗')
+    expect(wrapper.text()).not.toContain('載入中')
+  })
+
+  it('keeps loading while a stale load settles before the newer one', async () => {
+    let resolveFirst
+    let resolveSecond
+    const loadPromotions = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise((resolve) => (resolveFirst = resolve)))
+      .mockImplementationOnce(() => new Promise((resolve) => (resolveSecond = resolve)))
+    const { wrapper } = mountWithStores({ promotion: { loadPromotions } })
+
+    await wrapper.findAllComponents(CategoryFilter)[1].vm.$emit('update:modelValue', '海鮮')
+    resolveFirst()
+    await flushPromises()
+    expect(wrapper.text()).toContain('載入中')
+
+    resolveSecond()
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('載入中')
+  })
+
+  it('ignores a second load-more click while one is in flight', async () => {
+    let resolveMore
+    const loadMore = vi.fn(() => new Promise((resolve) => (resolveMore = resolve)))
+    const { wrapper } = mountWithStores({
+      promotion: { promotions: [PROMOTION], hasMore: true, loadMore },
+    })
+    await flushPromises()
+
+    // The button is disabled while loading, so call the handler directly to hit the guard.
+    const first = wrapper.vm.handleLoadMore()
+    await wrapper.vm.handleLoadMore()
+    expect(loadMore).toHaveBeenCalledTimes(1)
+
+    resolveMore()
+    await first
+  })
+
   it('loads the next page from the load-more button only when there is more', async () => {
     const { wrapper, promotionStore } = mountWithStores({
       promotion: { promotions: [PROMOTION], hasMore: true },
