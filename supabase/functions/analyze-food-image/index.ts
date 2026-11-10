@@ -12,7 +12,7 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.125.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.116.0'
 
-const CATEGORIES = ['蔬果', '肉類', '乳製品', '飲品', '其他']
+const CATEGORIES = ['蔬果', '肉類', '海鮮', '乳製品', '飲品', '其他']
 
 // Hand-rolled instead of zodOutputFormat()/zod: zodOutputFormat calls the Anthropic SDK's own
 // bundled zod/v4 on a schema built from our separately-imported zod package - if Deno resolves

@@ -25,7 +25,13 @@ foods             # id, user_id, name, category_code (FK -> categories), quantit
 shopping_items    # id, user_id, name, quantity, checked, added_at
 recipes           # id, user_id, title, ingredients (jsonb), instructions, image_url, tags (text[]), is_favorite, created_at
 promotions        # id, user_id, name, category_code (FK -> categories), original_price, discount_price, store, valid_from, valid_until, image_url, created_at
+promotion_products       # shared — id (全聯全電商 product id, bigint PK), name, category_code (FK), source_category, store_source, sale_price, market_price, is_discount_price, sale_price_tag, image_url, is_sold_out, first_seen_at, last_seen_at
+promotion_price_changes  # shared — (product_id, observed_on) PK, sale_price, market_price; one row per day a product's sale_price changed
+promotion_sync_runs      # shared — id, started_at, finished_at, status, product_count, error
+promotion_deals          # view (security_invoker) — products from the last successful sync with price_drop / discount_price / deep_discount badges
 ```
+
+- **特價食材 tables** (`20261001000000_promotion_products.sql`) are shared reference data like `categories`: select-only for `authenticated`, no write policies. Only `scripts/sync-pxbox.mjs` (GitHub Actions, `.github/workflows/sync-pxbox.yml`) writes them, with the service role key. `promotions` (the per-user table from v1) is unrelated and still unused.
 
 - **Naming**: SQL identifiers use `snake_case` (`expiry_date`, `user_id`, `added_at`). The `src/types/*.js` shapes are `camelCase` — converting between the two is `services/`'s job, never the store's or component's.
 - **Primary keys**: `id uuid primary key default gen_random_uuid()`, matching the `crypto.randomUUID()` ids the Pinia stores currently generate client-side. `categories` is the one exception — it uses its natural key (`code text primary key`, e.g. `'蔬果'`) since the value set is small and fixed.
