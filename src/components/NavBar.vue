@@ -17,7 +17,7 @@ const navLinks = [
 
 async function handleLogout() {
   await auth.logout()
-  router.push({ name: 'login' })
+  router.push({ name: 'home' })
 }
 </script>
 
