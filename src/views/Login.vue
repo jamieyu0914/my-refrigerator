@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const email = ref('')
@@ -8,8 +7,6 @@ const password = ref('')
 const errorMessage = ref('')
 const isSubmitting = ref(false)
 
-const route = useRoute()
-const router = useRouter()
 const auth = useAuthStore()
 
 async function handleSubmit() {
@@ -20,7 +17,6 @@ async function handleSubmit() {
 
   try {
     await auth.login(email.value.trim(), password.value)
-    router.push(route.query.redirect || { name: 'home' })
   } catch {
     errorMessage.value = '登入失敗，請確認 Email 或密碼是否正確。'
   } finally {

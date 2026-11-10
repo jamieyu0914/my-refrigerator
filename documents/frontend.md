@@ -40,7 +40,7 @@ src/
 │   ├── Promotions.vue              # 特價食材（篩選／搜尋／排序／分頁，可加入採買清單）
 │   ├── FoodForm.vue                # 新增／編輯冰箱物品表單，依路由是否帶 :id 判斷模式，含刪除功能
 │   └── Login.vue                   # 登入表單
-├── App.vue                         # 依 route.meta.layout 動態切換 DefaultLayout／AuthLayout
+├── App.vue                         # 未登入一律用 AuthLayout，登入後依 route.meta.layout 切換 DefaultLayout／AuthLayout
 ├── main.js                         # authStore.init() 完成後才 createApp(App).use(pinia).use(router).mount('#app')
 ├── test-setup.js                   # Vitest 全域設定：stub 全域註冊的 RouterLink／RouterView
 └── style.css                       # mobile-first 基礎樣式（light/dark 主題、觸控友善）
@@ -49,11 +49,11 @@ src/
 ## 重點功能
 
 - **頁面路由**：`src/router/index.js` 用 `createRouter()` 建立八個主要路由——`/`（home）、`/refrigerator`、`/scan`、`/shopping-list`、`/recipes`（含 `/recipes/new`、`/recipes/:id`、`/recipes/:id/edit`）、`/favorites`、`/promotions`——外加 `/food/new`、`/food/:id/edit` 兩個物品表單路由，全部設 `meta: { requiresAuth: true }`
-- **登入守衛**：`router.beforeEach` 依 `useAuthStore().isLoggedIn` 保護需登入的路由（未登入導向 `/login` 並帶 `redirect` query），已登入者也無法停留在 `/login`；`/login` 另設 `meta: { layout: 'auth' }` 套用無 NavBar 的外殼；`main.js` 會先 `await authStore.init()`（向 Supabase 查一次現有 session）才掛載 router，避免重新整理頁面時守衛誤判成未登入
+- **登入守衛**：`/` 是入口路由——未登入時直接在 `/` 顯示登入表單（網址維持站台根目錄），登入後顯示首頁；`router.beforeEach` 依 `useAuthStore().isLoggedIn` 保護其他需登入的路由，未登入一律導回 `/`（不帶 query，登入後停留在首頁）；舊的 `/login` 會 redirect 到 `/`；`main.js` 會先 `await authStore.init()`（向 Supabase 查一次現有 session）才掛載 router，避免重新整理頁面時守衛誤判成未登入
 - **登入登出**：`stores/auth.js`（Pinia setup store）管理 `isLoggedIn`／`user`，實際驗證委派給 `services/authService.js`（呼叫 Supabase Auth，詳見 `documents/database.md`）；`components/NavBar.vue` 依 `auth.isLoggedIn` 顯示登出按鈕與分頁導覽
 - **分頁導覽**：`NavBar.vue` 在登入後顯示七個分頁的連結列（首頁／我的冰箱／拍照辨識／採買清單／食譜／最愛食譜／特價食材），橫向可捲動且每個連結 ≥44px 觸控區塊，`active-class` 標示目前所在分頁
 - **拍照辨識食材（AI Vision）**：`views/ScanFood.vue` 串起 `ImageCapture.vue`（拍照/選圖）→ `stores/aiVision.js` 的 `analyzeImage()`（呼叫 Supabase Edge Function 辨識）→ `AiRecognitionResult.vue`（辨識結果的可編輯草稿：勾選／改名／改分類／移除，低信心值項目標「請確認」）→ 使用者按「確認加入冰箱」才觸發 `confirmSelected()` 寫入 `foodStore`；辨識結果在使用者確認前完全不會寫入 Supabase（遵循 `.claude/skills/ai-vision/SKILL.md` 的規則），詳見 `documents/backend.md`
 - **物品 CRUD**：`stores/food.js`（Pinia）提供 `addFood`／`updateFood`／`deleteFood`／`fetchFood`，資料存取委派給 `services/foodService.js`；`views/Refrigerator.vue` 顯示清單並可依分類篩選，`views/FoodForm.vue` 依路由參數 `:id` 是否存在判斷「新增」或「編輯」模式
 - **到期提醒**：`utils/expiry.js` 的 `getExpiryStatus()` 依到期日換算「已過期／即將到期（3 天內）／正常／未設定」四種狀態，`components/ExpiryBadge.vue` 依狀態上色顯示
-- **Layout 切換**：`App.vue` 依當前路由的 `route.meta.layout` 動態選擇 `layouts/DefaultLayout.vue`（含 NavBar）或 `layouts/AuthLayout.vue`（無 NavBar，登入頁用）
+- **Layout 切換**：`App.vue` 依當前路由的 `route.meta.layout` 動態選擇 `layouts/DefaultLayout.vue`（含 NavBar）或 `layouts/AuthLayout.vue`（無 NavBar，未登入的登入表單用）
 - **手機優先**：`style.css` 先寫小螢幕樣式，`min-width: 768px` 再加桌機調整；按鈕與導覽連結 tap 區塊 ≥44px（見 `style.css` 與各元件的 `<style scoped>`）；`ImageCapture.vue` 的 `<input type="file" capture="environment">` 讓手機直接喚起相機
