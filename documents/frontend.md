@@ -37,7 +37,7 @@ src/
 │   ├── Favorites.vue               # 最愛食譜（與 Recipes 共用 recipeStore，篩出 isFavorite）
 │   ├── RecipeDetail.vue            # 食譜詳情，isOwn 為 true 才顯示編輯/刪除按鈕
 │   ├── RecipeForm.vue              # 新增／編輯食譜共用表單，依 :id 是否存在判斷模式
-│   ├── Promotions.vue              # 特價食材（佔位頁面，功能開發中）
+│   ├── Promotions.vue              # 特價食材（篩選／搜尋／排序／分頁，可加入採買清單）
 │   ├── FoodForm.vue                # 新增／編輯冰箱物品表單，依路由是否帶 :id 判斷模式，含刪除功能
 │   └── Login.vue                   # 登入表單
 ├── App.vue                         # 依 route.meta.layout 動態切換 DefaultLayout／AuthLayout
